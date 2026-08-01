@@ -32,6 +32,7 @@ export class Router {
   goToPay(section) { this.goTo('pay', { section }); }
 
   toggleMobileNav() {
-    document.getElementById('nav-links').classList.toggle('open');
+    const open = document.getElementById('nav-links').classList.toggle('open');
+    document.querySelector('.hamburger').setAttribute('aria-expanded', String(open));
   }
 }

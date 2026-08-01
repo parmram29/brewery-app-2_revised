@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sweet &amp; Crispy — Grenada</title>
-<meta name="description" content="Sweet & Crispy — a family-run kitchen in Grenada. Wood-fired pizza and island favourites. Order online, pay by card or cash, or reserve a table.">
+<meta name="description" content="Sweet & Crispy — wood-fired pizza and island favourites in Grenada. Order online, pay by card or cash.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
@@ -20,7 +20,7 @@
   <div class="nav-links" id="nav-links">
     <button class="nav-btn active" data-action="go-to" data-page="home">Home</button>
     <button class="nav-btn" data-action="go-to" data-page="about">About &amp; Contact</button>
-    <button class="nav-btn order-nav" data-action="go-to" data-page="pay">Order &amp; Reserve</button>
+    <button class="nav-btn order-nav" data-action="go-to" data-page="pay">Order Now</button>
   </div>
   <div class="nav-right">
     <button class="staff-link" data-action="go-to" data-page="admin">Staff</button>
@@ -54,7 +54,6 @@
           </svg>
           <h1>Sweet<br>&amp; Crispy</h1>
           <p class="bc-tag">True blue Grenada</p>
-          <p class="bc-signed">— made by our family</p>
         </div>
         <div class="bc-photo">
           <img src="/images/hero-pizza.jpg" alt="Sweet & Crispy pizza" id="hero-photo">
@@ -83,10 +82,9 @@
       </div>
     </div>
 
-    <p class="sub hero-sub">A family kitchen in true blue Grenada — wood-fired pizza and island favourites, made simple, served with love.</p>
+    <p class="sub hero-sub">Wood-fired pizza and island favourites, made fresh in true blue Grenada — no shortcuts, no filler, just real food done right.</p>
     <div class="hero-btns">
       <button class="btn btn-fill" data-action="go-to-pay" data-section="order">Order Now</button>
-      <button class="btn btn-outline" data-action="go-to-pay" data-section="reserve">Reserve a Table</button>
     </div>
     <div class="hero-meta">
       <span>📍 Grenada, W.I.</span>
@@ -161,26 +159,17 @@
   <div id="about-footer"></div>
 </div>
 
-<!-- ═══════════ PAY: ORDER & RESERVE ═══════════ -->
+<!-- ═══════════ PAY: ORDER ═══════════ -->
 <div id="page-pay" class="page">
   <div class="wrap">
     <div class="sec-head center">
-      <div class="eyebrow">Order &amp; Reserve</div>
+      <div class="eyebrow">Order Online</div>
       <h2>Get your food, your way</h2>
-    </div>
-    <div class="pay-switch">
-      <button class="pay-tab on" id="pay-tab-order" data-action="switch-pay" data-section="order">Order Food</button>
-      <button class="pay-tab" id="pay-tab-reserve" data-action="switch-pay" data-section="reserve">Reserve a Table</button>
     </div>
 
     <!-- ORDER FOOD -->
     <div class="pay-section on" id="pay-order">
       <div id="order-content"></div>
-    </div>
-
-    <!-- RESERVE -->
-    <div class="pay-section" id="pay-reserve">
-      <div id="reserve-content"></div>
     </div>
   </div>
   <div id="pay-footer"></div>

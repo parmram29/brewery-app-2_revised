@@ -38,6 +38,7 @@ export class OrderPage {
     if (!t) return;
     const { action, id, size, sub, key, delta, method } = t.dataset;
     switch (action) {
+      case 'retry-menu':     this.retryMenu(); break;
       case 'set-cat':        this.setCategory(t.dataset.cat); break;
       case 'set-subcat':     this.setSubcategory(sub === '__all__' ? null : sub); break;
       case 'toggle-subcat':  this.toggleSubcatSection(sub); break;
@@ -64,6 +65,12 @@ export class OrderPage {
 
   // ── State transitions ────────────────────────────────────────
   setCategory(cat) { this.category = cat; this.subcategory = null; this.expandedSubcats = new Set(); this.renderContent(); }
+
+  async retryMenu() {
+    this.menuStore.loadError = null;
+    await this.menuStore.load();
+    this.renderContent();
+  }
 
   // Selecting a chip filters straight to that subcategory (and counts as "expanded").
   // Selecting "All" collapses back into the dropdown view instead of dumping every
@@ -125,7 +132,12 @@ export class OrderPage {
           ${open ? `<div class="subcat-body">${items.map(i => this.renderItemRow(i)).join('')}</div>` : ''}
         `;
         }).join('')
-      : '<p style="color:var(--ink-dim);padding:2rem 0">Loading menu…</p>';
+      : this.menuStore.loadError
+        ? `<div style="padding:2rem 0;color:var(--ink-soft)">
+             <p style="margin-bottom:1rem">${escapeHtml(this.menuStore.loadError)}</p>
+             <button class="btn btn-outline btn-sm" data-action="retry-menu">Try Again</button>
+           </div>`
+        : '<p style="color:var(--ink-dim);padding:2rem 0">Loading menu…</p>';
 
     this.root.innerHTML = `
       <div class="order-cats">${cats.map(c => `<button class="order-cat-btn${this.category === c.id ? ' on' : ''}" data-action="set-cat" data-cat="${c.id}">${c.label}</button>`).join('')}</div>

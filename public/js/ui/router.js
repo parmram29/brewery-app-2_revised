@@ -28,7 +28,8 @@ export class Router {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  /** Convenience for "go to the Pay page, already on the Order or Reserve tab." */
+  /** Convenience for "go to the Pay page" (kept as a named method since call
+      sites pass a payload — the payload itself is currently unused). */
   goToPay(section) { this.goTo('pay', { section }); }
 
   toggleMobileNav() {

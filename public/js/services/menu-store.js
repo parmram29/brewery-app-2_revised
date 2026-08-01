@@ -10,6 +10,7 @@ export class MenuStore {
     this.cardPaymentsEnabled = false;
     this.whatsapp = '14735369931';
     this._loaded = false;
+    this.loadError = null;
   }
 
   async load() {
@@ -18,12 +19,19 @@ export class MenuStore {
       this.api.get('/api/menu'),
       this.api.get('/api/payments/config'),
     ]);
-    if (menuRes.ok) this.items = menuRes.items;
+    if (menuRes.ok) {
+      this.items = menuRes.items;
+      this.loadError = null;
+      this._loaded = true; // only latch "loaded" on success, so a failed
+                            // request (DB down, server not running) can be
+                            // retried instead of permanently showing nothing.
+    } else {
+      this.loadError = menuRes.error || 'Could not load the menu.';
+    }
     if (cfgRes.ok) {
       this.cardPaymentsEnabled = cfgRes.cardPaymentsEnabled;
       if (cfgRes.whatsapp) this.whatsapp = cfgRes.whatsapp;
     }
-    this._loaded = true;
   }
 
   byId(id) { return this.items.find(i => i.id === id); }

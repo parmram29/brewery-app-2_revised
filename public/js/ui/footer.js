@@ -17,7 +17,7 @@ export function footerHtml(whatsapp) {
       </div>
       <div>
         <h5>Get In Touch</h5>
-        <div class="foot-line" data-action="go-to" data-page="pay" style="cursor:pointer">Order &amp; Reserve →</div>
+        <div class="foot-line" data-action="go-to" data-page="pay" style="cursor:pointer">Order Online →</div>
         <div class="foot-line" data-action="go-to" data-page="about" style="cursor:pointer">About &amp; Contact →</div>
       </div>
     </div>

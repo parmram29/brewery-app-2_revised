@@ -1,35 +1,61 @@
+// ============================================================
+// Payment routes — provider-agnostic.
+//
+// Nothing here knows which gateway is in use. Swapping Stripe for
+// Republic Bank EPay is PAYMENT_PROVIDER=epay plus a completed
+// lib/payments/epay.js; this file does not change.
+// ============================================================
+
 const router = require('express').Router();
 const db = require('../db/pool');
 const { rateLimit } = require('../lib/security');
+const { getProvider } = require('../lib/payments');
 
-function getStripe() {
-  if (!process.env.STRIPE_SECRET_KEY) return null;
-  // Lazily constructed so the app still boots without Stripe configured yet.
-  const Stripe = require('stripe');
-  return new Stripe(process.env.STRIPE_SECRET_KEY);
+/** Best-effort audit write — never fails the request it is logging. */
+async function logEvent(orderId, event, method, amount, detail) {
+  try {
+    await db.query(
+      'INSERT INTO payment_events (order_id, event, method, amount_ec, detail) VALUES (?, ?, ?, ?, ?)',
+      [orderId, event, method, amount, detail ? String(detail).slice(0, 255) : null]
+    );
+  } catch (err) {
+    console.error('payment_events write failed:', err.message);
+  }
 }
 
-// GET /api/payments/config — tells the frontend whether card payments are live,
-// without ever exposing the secret key.
+// GET /api/payments/config — tells the frontend whether to offer the card
+// option. Never exposes keys; the provider name is not sensitive.
 router.get('/config', (req, res) => {
-  res.json({ ok: true, cardPaymentsEnabled: !!process.env.STRIPE_SECRET_KEY, whatsapp: process.env.WHATSAPP_NUMBER || '' });
+  const provider = getProvider();
+  res.json({
+    ok: true,
+    cardPaymentsEnabled: provider.isConfigured(),
+    provider: provider.name,
+    whatsapp: process.env.WHATSAPP_NUMBER || '',
+  });
 });
 
-// POST /api/payments/checkout-session — build a Stripe-hosted Checkout Session for
-// an existing unpaid order. Card details are entered on Stripe's page and never
-// touch this server, keeping us out of PCI card-data scope (SAQ A).
+// POST /api/payments/checkout-session — start a hosted payment for an
+// existing unpaid order. Card details are entered on the provider's page and
+// never reach this server, which is what keeps us in PCI DSS SAQ A scope.
 router.post('/checkout-session', rateLimit('checkout-session', 15, 10 * 60 * 1000), async (req, res) => {
-  const stripe = getStripe();
-  if (!stripe) return res.status(503).json({ ok: false, error: 'Card payments are not configured yet. Please choose cash, or contact us on WhatsApp.' });
+  const provider = getProvider();
+  if (!provider.isConfigured()) {
+    return res.status(503).json({
+      ok: false,
+      error: 'Card payments are not set up yet. Please choose cash, or contact us on WhatsApp.',
+    });
+  }
 
-  // Looked up by order_ref, not the sequential id. The ref is unguessable
-  // (crypto.randomBytes), so possessing it is the customer's capability to pay
-  // that order. Accepting a plain integer id let anyone walk 1,2,3… and open a
-  // checkout for other people's orders, confirming which ids exist.
-  const { order_ref } = req.body;
+  // Looked up by order_ref, never a sequential id: the ref is unguessable
+  // (crypto.randomBytes), so holding it is the customer's capability to pay
+  // that specific order. An integer id would let anyone walk 1,2,3… and open
+  // checkouts for other people's orders.
+  const { order_ref } = req.body || {};
   if (typeof order_ref !== 'string' || !order_ref.trim()) {
     return res.status(400).json({ ok: false, error: 'Order reference required' });
   }
+
   try {
     const [[order]] = await db.query('SELECT * FROM orders WHERE order_ref = ?', [order_ref.trim()]);
     if (!order) return res.status(404).json({ ok: false, error: 'Order not found' });
@@ -40,101 +66,94 @@ router.post('/checkout-session', rateLimit('checkout-session', 15, 10 * 60 * 100
     if (!items.length) return res.status(400).json({ ok: false, error: 'Order has no items' });
 
     const clientUrl = (process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+    const ref = encodeURIComponent(order.order_ref);
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: items.map(i => ({
-        quantity: i.quantity,
-        price_data: {
-          currency: 'xcd',
-          unit_amount: Math.round(parseFloat(i.unit_price) * 100),
-          product_data: {
-            name: i.size ? `${i.item_name} (${i.size})` : i.item_name,
-            description: i.special_instructions || undefined,
-          },
-        },
-      })),
-      client_reference_id: order.order_ref,
-      metadata: { order_id: String(order.id), order_ref: order.order_ref },
-      success_url: `${clientUrl}/?paid=1&ref=${encodeURIComponent(order.order_ref)}`,
-      cancel_url: `${clientUrl}/?paycancelled=1&ref=${encodeURIComponent(order.order_ref)}`,
+    const { redirectUrl, paymentRef } = await provider.createCheckout({
+      order,
+      items,
+      successUrl: `${clientUrl}/?paid=1&ref=${ref}`,
+      cancelUrl: `${clientUrl}/?paycancelled=1&ref=${ref}`,
     });
 
-    await db.query('UPDATE orders SET stripe_session_id = ?, payment_method = ? WHERE id = ?', [session.id, 'card', order.id]);
     await db.query(
-      'INSERT INTO payment_events (order_id, event, method, amount_ec, detail) VALUES (?, ?, ?, ?, ?)',
-      [order.id, 'checkout_session_created', 'card', order.total_ec, session.id]
-    ).catch(() => {});
-    res.json({ ok: true, url: session.url });
+      'UPDATE orders SET payment_ref = ?, payment_provider = ?, payment_method = ? WHERE id = ?',
+      [paymentRef, provider.name, 'card', order.id]
+    );
+    await logEvent(order.id, 'checkout_started', 'card', order.total_ec, paymentRef);
+
+    res.json({ ok: true, url: redirectUrl });
   } catch (err) {
-    console.error('Stripe checkout session error:', err.message);
+    console.error('Checkout creation failed:', err.message);
     res.status(500).json({ ok: false, error: 'Could not start checkout. Please try again.' });
   }
 });
 
-// POST /api/payments/webhook — Stripe calls this server-to-server when a payment
-// completes. The signature is verified so only genuine Stripe events are trusted;
-// this is the ONLY place an order is ever marked paid.
+// POST /api/payments/webhook — the provider's server-to-server confirmation.
+//
+// This is the ONLY place an order is ever marked paid by card. The customer's
+// browser landing on the success URL is cosmetic and proves nothing — anyone
+// can visit that URL without paying. Only a signature-verified message from
+// the provider is trusted.
 router.post('/webhook', async (req, res) => {
-  const stripe = getStripe();
-  if (!stripe) return res.status(503).send('Stripe not configured');
+  const provider = getProvider();
+  if (!provider.isConfigured()) return res.status(503).send('Payments not configured');
 
-  const sig = req.headers['stripe-signature'];
-  let event;
+  let result;
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    result = await provider.verifyCallback(req);
   } catch (err) {
-    console.error('Stripe webhook signature verification failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    console.error('Callback verification threw:', err.message);
+    return res.status(400).send('Callback error');
+  }
+
+  if (!result || !result.verified) {
+    // Either a forgery or a misconfigured signing secret. Never act on it.
+    console.error('Rejected unverified payment callback:', result?.detail || 'no detail');
+    return res.status(400).send('Signature verification failed');
   }
 
   try {
-    const session = event.data.object;
+    const { paymentRef, outcome, detail } = result;
 
-    if (event.type === 'checkout.session.completed' && session.payment_status === 'paid') {
-      // `AND payment_status <> 'paid'` makes this idempotent. Stripe retries a
-      // webhook until it gets a 2xx, and duplicate deliveries are normal — without
-      // the guard each retry rewrites paid_at and logs a duplicate audit row.
-      const [result] = await db.query(
+    if (outcome === 'paid') {
+      // `AND payment_status <> 'paid'` makes this idempotent: providers retry
+      // callbacks until they get a 2xx, and duplicate deliveries are normal.
+      const [update] = await db.query(
         `UPDATE orders
             SET payment_status = 'paid',
                 status = IF(status = 'pending', 'confirmed', status),
                 paid_at = NOW()
-          WHERE stripe_session_id = ? AND payment_status <> 'paid'`,
-        [session.id]
+          WHERE payment_ref = ? AND payment_status <> 'paid'`,
+        [paymentRef]
       );
-      if (result.affectedRows > 0) {
-        await db.query(
-          `INSERT INTO payment_events (order_id, event, method, amount_ec, detail)
-           SELECT id, 'payment_confirmed', 'card', total_ec, ? FROM orders WHERE stripe_session_id = ?`,
-          [session.payment_intent || session.id, session.id]
-        ).catch(() => {});
+      if (update.affectedRows > 0) {
+        const [[order]] = await db.query('SELECT id, total_ec FROM orders WHERE payment_ref = ?', [paymentRef]);
+        if (order) await logEvent(order.id, 'payment_confirmed', 'card', order.total_ec, detail);
       }
     }
 
-    // A customer who abandons checkout leaves the order pending forever
-    // otherwise, with a stale session id that blocks re-checkout.
-    if (event.type === 'checkout.session.expired') {
+    if (outcome === 'expired') {
+      // Frees the order so the customer can start a fresh checkout; an
+      // abandoned attempt would otherwise leave a stale ref blocking retry.
       await db.query(
-        `UPDATE orders SET stripe_session_id = NULL
-          WHERE stripe_session_id = ? AND payment_status <> 'paid'`,
-        [session.id]
+        `UPDATE orders SET payment_ref = NULL WHERE payment_ref = ? AND payment_status <> 'paid'`,
+        [paymentRef]
       );
     }
 
-    if (event.type === 'checkout.session.async_payment_failed') {
+    if (outcome === 'failed') {
       await db.query(
-        `UPDATE orders SET payment_status = 'failed'
-          WHERE stripe_session_id = ? AND payment_status <> 'paid'`,
-        [session.id]
+        `UPDATE orders SET payment_status = 'failed' WHERE payment_ref = ? AND payment_status <> 'paid'`,
+        [paymentRef]
       );
+      const [[order]] = await db.query('SELECT id, total_ec FROM orders WHERE payment_ref = ?', [paymentRef]);
+      if (order) await logEvent(order.id, 'payment_failed', 'card', order.total_ec, detail);
     }
 
     res.json({ received: true });
   } catch (err) {
-    console.error('Webhook handling error:', err.message);
-    res.status(500).send('Webhook handler error');
+    console.error('Callback handling error:', err.message);
+    res.status(500).send('Callback handler error');
   }
 });
 

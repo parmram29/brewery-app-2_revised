@@ -58,12 +58,16 @@ CREATE TABLE IF NOT EXISTS orders (
   status           ENUM('pending','confirmed','preparing','ready','completed','cancelled') NOT NULL DEFAULT 'pending',
   payment_method   ENUM('card','cash') NULL,
   payment_status   ENUM('unpaid','paid','failed') NOT NULL DEFAULT 'unpaid',
-  stripe_session_id VARCHAR(255) NULL,
+  -- Gateway-neutral: which provider handled it, and that provider's reference
+  -- for the attempt. Named generically so switching gateways (Stripe →
+  -- Republic Bank EPay) is not a schema migration.
+  payment_provider VARCHAR(20)  NULL,
+  payment_ref      VARCHAR(255) NULL,
   paid_at          TIMESTAMP     NULL,
   created_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
   updated_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  -- Without idx_orders_stripe_session every payment webhook full-scans orders.
-  KEY idx_orders_stripe_session (stripe_session_id),
+  -- Without this index every payment callback full-scans orders.
+  KEY idx_orders_payment_ref (payment_ref),
   KEY idx_orders_status_created (status, created_at),
   KEY idx_orders_created (created_at)
 );

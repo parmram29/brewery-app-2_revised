@@ -1,9 +1,10 @@
 const router = require('express').Router();
 const db     = require('../db/pool');
 const { makeRef } = require('../lib/security');
+const { requireStaff } = require('../lib/auth');
 
 // GET /api/reservations?date=YYYY-MM-DD&status=confirmed
-router.get('/', async (req, res) => {
+router.get('/', requireStaff, async (req, res) => {
   try {
     const { date, status } = req.query;
     let sql = 'SELECT * FROM reservations WHERE 1=1';
@@ -100,7 +101,7 @@ router.post('/', async (req, res) => {
 });
 
 // PATCH /api/reservations/:id/status — update status (seated, no-show, cancelled)
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', requireStaff, async (req, res) => {
   const { status } = req.body;
   const allowed = ['confirmed', 'cancelled', 'seated', 'no-show'];
   if (!allowed.includes(status)) {
@@ -115,7 +116,7 @@ router.patch('/:id/status', async (req, res) => {
 });
 
 // GET /api/reservations/admin/settings — get capacity/hours settings
-router.get('/admin/settings', async (req, res) => {
+router.get('/admin/settings', requireStaff, async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM settings');
     const s = {};
@@ -127,7 +128,7 @@ router.get('/admin/settings', async (req, res) => {
 });
 
 // PATCH /api/reservations/admin/settings — update capacity
-router.patch('/admin/settings', async (req, res) => {
+router.patch('/admin/settings', requireStaff, async (req, res) => {
   try {
     const { max_covers_per_slot } = req.body;
     if (max_covers_per_slot) {

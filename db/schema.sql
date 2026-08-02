@@ -61,7 +61,11 @@ CREATE TABLE IF NOT EXISTS orders (
   stripe_session_id VARCHAR(255) NULL,
   paid_at          TIMESTAMP     NULL,
   created_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  updated_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  -- Without idx_orders_stripe_session every payment webhook full-scans orders.
+  KEY idx_orders_stripe_session (stripe_session_id),
+  KEY idx_orders_status_created (status, created_at),
+  KEY idx_orders_created (created_at)
 );
 
 -- ── Order line items ──────────────────────────────────────────
@@ -79,6 +83,28 @@ CREATE TABLE IF NOT EXISTS order_items (
   line_total           DECIMAL(8,2)  GENERATED ALWAYS AS (unit_price * quantity) STORED,
   FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
   FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE SET NULL
+);
+
+-- ── Payment events (append-only audit log) ───────────────────
+-- Every payment-related transition lands here: order created, checkout
+-- opened, provider confirmed, cash confirmed. This is what a
+-- reconciliation or a customer dispute is answered from.
+--
+-- Deliberately contains NO cardholder data — no PAN, no CVV, no expiry.
+-- There is no column here that could hold one, which is what keeps this
+-- application out of PCI DSS SAQ D scope. If anyone proposes storing card
+-- details "to make refunds easier", the answer is no.
+CREATE TABLE IF NOT EXISTS payment_events (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  order_id   INT           NULL,
+  event      VARCHAR(60)   NOT NULL,
+  method     VARCHAR(20)   NULL,
+  amount_ec  DECIMAL(8,2)  NULL,
+  detail     VARCHAR(255)  NULL,
+  created_at TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_pe_order (order_id),
+  KEY idx_pe_created (created_at),
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
 );
 
 -- ── Reservations ─────────────────────────────────────────────

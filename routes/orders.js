@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const db = require('../db/pool');
 const { makeRef, rateLimit } = require('../lib/security');
+const { requireStaff } = require('../lib/auth');
 
 const MAX_QTY = 20;
 const MAX_LINES = 30;
@@ -54,22 +55,37 @@ async function resolveCart(items) {
   return { resolved };
 }
 
+// Fetches every order's items in ONE query rather than one query per order,
+// which is what this did before (N+1: 200 orders meant 201 round trips).
 async function attachItems(orders) {
-  for (const o of orders) {
-    const [items] = await db.query('SELECT * FROM order_items WHERE order_id = ?', [o.id]);
-    o.items = items;
-  }
+  if (!orders.length) return;
+  const ids = orders.map(o => o.id);
+  const [items] = await db.query(
+    `SELECT * FROM order_items WHERE order_id IN (${ids.map(() => '?').join(',')})`,
+    ids
+  );
+  const byOrder = new Map(orders.map(o => [o.id, []]));
+  for (const item of items) byOrder.get(item.order_id)?.push(item);
+  for (const o of orders) o.items = byOrder.get(o.id) || [];
 }
 
-router.get('/', async (req, res) => {
+// Staff-only: this returns every customer's name and phone number.
+router.get('/', requireStaff, async (req, res) => {
   try {
     const { status } = req.query;
-    let sql = 'SELECT * FROM orders'; const params = [];
-    if (status) { sql += ' WHERE status = ?'; params.push(status); }
-    sql += ' ORDER BY created_at DESC LIMIT 200';
-    const [orders] = await db.query(sql, params);
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 200);
+    const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+
+    let where = ''; const params = [];
+    if (status) { where = ' WHERE status = ?'; params.push(status); }
+
+    const [[{ total }]] = await db.query(`SELECT COUNT(*) AS total FROM orders${where}`, params);
+    const [orders] = await db.query(
+      `SELECT * FROM orders${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
     await attachItems(orders);
-    res.json({ ok: true, orders });
+    res.json({ ok: true, orders, limit, offset, total });
   } catch (err) { res.status(500).json({ ok: false, error: 'Database error' }); }
 });
 
@@ -128,9 +144,17 @@ router.post('/', rateLimit('create-order', 15, 10 * 60 * 1000), async (req, res)
   } finally { conn.release(); }
 });
 
-// PATCH /api/orders/:id/items — edit an order's items, only while it is still
-// pending and unpaid (covers "I want to change my order before paying/pickup").
-router.patch('/:id/items', async (req, res) => {
+// PATCH /api/orders/:id/items — staff-only correction of an order's contents
+// ("customer called and wants to swap an item"), allowed only while the order
+// is still pending, unpaid, and has no Stripe Checkout Session attached.
+//
+// Both restrictions matter. This was previously public AND allowed edits after
+// a Checkout Session existed, which is a free-food exploit: place a cheap
+// order, open checkout, add expensive items to the order, then pay the original
+// cheap session. The webhook marks it paid and the kitchen makes the expensive
+// items. Once a session is created the priced basket is frozen — a changed
+// order means a new session.
+router.patch('/:id/items', requireStaff, async (req, res) => {
   const { items } = req.body;
   const conn = await db.getConnection();
   try {
@@ -138,6 +162,12 @@ router.patch('/:id/items', async (req, res) => {
     if (!order) return res.status(404).json({ ok: false, error: 'Order not found' });
     if (order.status !== 'pending' || order.payment_status === 'paid') {
       return res.status(409).json({ ok: false, error: 'This order can no longer be edited' });
+    }
+    if (order.stripe_session_id) {
+      return res.status(409).json({
+        ok: false,
+        error: 'Checkout has already started for this order — cancel it and place a new one to change the items.',
+      });
     }
     const { error, resolved } = await resolveCart(items);
     if (error) return res.status(400).json({ ok: false, error });
@@ -165,26 +195,33 @@ router.patch('/:id/items', async (req, res) => {
 
 // PATCH /api/orders/:id/payment — staff-only: confirm a cash payment was collected.
 // Card payments are marked paid exclusively by the Stripe webhook, never from here.
-router.patch('/:id/payment', async (req, res) => {
+router.patch('/:id/payment', requireStaff, async (req, res) => {
   const { payment_status } = req.body;
   if (!['paid', 'unpaid'].includes(payment_status)) return res.status(400).json({ ok: false, error: 'Invalid payment status' });
   try {
-    const [[order]] = await db.query('SELECT payment_method FROM orders WHERE id = ?', [req.params.id]);
+    const [[order]] = await db.query('SELECT id, payment_method, total_ec FROM orders WHERE id = ?', [req.params.id]);
     if (!order) return res.status(404).json({ ok: false, error: 'Order not found' });
     if (order.payment_method !== 'cash') return res.status(400).json({ ok: false, error: 'Only cash orders can be marked paid here' });
     await db.query('UPDATE orders SET payment_status = ?, paid_at = ? WHERE id = ?',
       [payment_status, payment_status === 'paid' ? new Date() : null, req.params.id]);
+    await db.query(
+      'INSERT INTO payment_events (order_id, event, method, amount_ec, detail) VALUES (?, ?, ?, ?, ?)',
+      [order.id, payment_status === 'paid' ? 'cash_confirmed' : 'cash_unconfirmed', 'cash', order.total_ec, 'Set by staff']
+    ).catch(() => {});
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ ok: false, error: 'Database error' }); }
 });
 
-router.patch('/:id/status', async (req, res) => {
-  const { status, payment_method } = req.body;
+// Note: payment_method is deliberately NOT accepted here. It used to be, which
+// allowed a card order to be relabelled 'cash' and then marked paid via
+// /payment above — marking an order paid without any money moving. How an
+// order was paid is decided at creation and, for card, only by Stripe.
+router.patch('/:id/status', requireStaff, async (req, res) => {
+  const { status } = req.body;
   const allowed = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'];
   if (!allowed.includes(status)) return res.status(400).json({ ok: false, error: 'Invalid status' });
   try {
-    await db.query('UPDATE orders SET status = ?, payment_method = COALESCE(?, payment_method) WHERE id = ?',
-      [status, payment_method || null, req.params.id]);
+    await db.query('UPDATE orders SET status = ? WHERE id = ?', [status, req.params.id]);
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ ok: false, error: 'Database error' }); }
 });

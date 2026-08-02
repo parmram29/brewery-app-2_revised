@@ -22,9 +22,16 @@ router.post('/checkout-session', rateLimit('checkout-session', 15, 10 * 60 * 100
   const stripe = getStripe();
   if (!stripe) return res.status(503).json({ ok: false, error: 'Card payments are not configured yet. Please choose cash, or contact us on WhatsApp.' });
 
-  const { order_id } = req.body;
+  // Looked up by order_ref, not the sequential id. The ref is unguessable
+  // (crypto.randomBytes), so possessing it is the customer's capability to pay
+  // that order. Accepting a plain integer id let anyone walk 1,2,3… and open a
+  // checkout for other people's orders, confirming which ids exist.
+  const { order_ref } = req.body;
+  if (typeof order_ref !== 'string' || !order_ref.trim()) {
+    return res.status(400).json({ ok: false, error: 'Order reference required' });
+  }
   try {
-    const [[order]] = await db.query('SELECT * FROM orders WHERE id = ?', [order_id]);
+    const [[order]] = await db.query('SELECT * FROM orders WHERE order_ref = ?', [order_ref.trim()]);
     if (!order) return res.status(404).json({ ok: false, error: 'Order not found' });
     if (order.payment_status === 'paid') return res.status(409).json({ ok: false, error: 'This order is already paid' });
     if (order.status === 'cancelled') return res.status(409).json({ ok: false, error: 'This order was cancelled' });
@@ -55,6 +62,10 @@ router.post('/checkout-session', rateLimit('checkout-session', 15, 10 * 60 * 100
     });
 
     await db.query('UPDATE orders SET stripe_session_id = ?, payment_method = ? WHERE id = ?', [session.id, 'card', order.id]);
+    await db.query(
+      'INSERT INTO payment_events (order_id, event, method, amount_ec, detail) VALUES (?, ?, ?, ?, ?)',
+      [order.id, 'checkout_session_created', 'card', order.total_ec, session.id]
+    ).catch(() => {});
     res.json({ ok: true, url: session.url });
   } catch (err) {
     console.error('Stripe checkout session error:', err.message);
@@ -79,16 +90,47 @@ router.post('/webhook', async (req, res) => {
   }
 
   try {
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      if (session.payment_status === 'paid') {
+    const session = event.data.object;
+
+    if (event.type === 'checkout.session.completed' && session.payment_status === 'paid') {
+      // `AND payment_status <> 'paid'` makes this idempotent. Stripe retries a
+      // webhook until it gets a 2xx, and duplicate deliveries are normal — without
+      // the guard each retry rewrites paid_at and logs a duplicate audit row.
+      const [result] = await db.query(
+        `UPDATE orders
+            SET payment_status = 'paid',
+                status = IF(status = 'pending', 'confirmed', status),
+                paid_at = NOW()
+          WHERE stripe_session_id = ? AND payment_status <> 'paid'`,
+        [session.id]
+      );
+      if (result.affectedRows > 0) {
         await db.query(
-          `UPDATE orders SET payment_status = 'paid', status = IF(status = 'pending', 'confirmed', status), paid_at = NOW()
-           WHERE stripe_session_id = ?`,
-          [session.id]
-        );
+          `INSERT INTO payment_events (order_id, event, method, amount_ec, detail)
+           SELECT id, 'payment_confirmed', 'card', total_ec, ? FROM orders WHERE stripe_session_id = ?`,
+          [session.payment_intent || session.id, session.id]
+        ).catch(() => {});
       }
     }
+
+    // A customer who abandons checkout leaves the order pending forever
+    // otherwise, with a stale session id that blocks re-checkout.
+    if (event.type === 'checkout.session.expired') {
+      await db.query(
+        `UPDATE orders SET stripe_session_id = NULL
+          WHERE stripe_session_id = ? AND payment_status <> 'paid'`,
+        [session.id]
+      );
+    }
+
+    if (event.type === 'checkout.session.async_payment_failed') {
+      await db.query(
+        `UPDATE orders SET payment_status = 'failed'
+          WHERE stripe_session_id = ? AND payment_status <> 'paid'`,
+        [session.id]
+      );
+    }
+
     res.json({ received: true });
   } catch (err) {
     console.error('Webhook handling error:', err.message);

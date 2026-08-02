@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const db = require('../db/pool');
+const { requireStaff } = require('../lib/auth');
 
 // GET /api/menu — full available menu, grouped implicitly by category/subcategory/sort_order
 router.get('/', async (req, res) => {
@@ -12,7 +13,7 @@ router.get('/', async (req, res) => {
 });
 
 // PATCH /api/menu/:id/toggle — staff: show/hide an item without deleting it
-router.patch('/:id/toggle', async (req, res) => {
+router.patch('/:id/toggle', requireStaff, async (req, res) => {
   try {
     await db.query('UPDATE menu_items SET available = NOT available WHERE id = ?', [req.params.id]);
     res.json({ ok: true });

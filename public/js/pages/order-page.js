@@ -247,7 +247,7 @@ export class OrderPage {
       return;
     }
 
-    const sessionRes = await this.api.post('/api/payments/checkout-session', { order_id: order.id });
+    const sessionRes = await this.api.post('/api/payments/checkout-session', { order_ref: order.order_ref });
     if (!sessionRes.ok) { this.toast.show(sessionRes.error, 'err'); btn.disabled = false; btn.textContent = 'Place Order'; return; }
     this.cart.clear();
     window.location.href = sessionRes.url;

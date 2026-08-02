@@ -32,6 +32,15 @@ export class HomePage {
   }
 
   renderSignaturePicks() {
+    // Item count is driven off the loaded menu rather than a hard-coded
+    // number, so it can never drift out of sync with the seed. This lives
+    // here (not onEnter) because Home is already active on first paint, so
+    // onEnter never fires for the initial load.
+    const count = this.menuStore.items.length;
+    if (count) {
+      document.getElementById('hero-item-count').textContent = `🍕 ${count} items on the menu`;
+    }
+
     const picks = this.menuStore.signaturePicks(6);
     document.getElementById('sig-grid').innerHTML = picks.map(i => `
       <div class="sig-card">

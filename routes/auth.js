@@ -1,5 +1,6 @@
 const router = require('express').Router();
-const { rateLimit } = require('../lib/security');
+const { rateLimit, clientKey } = require('../lib/security');
+const { securityEvent } = require('../lib/log');
 const {
   COOKIE_NAME, createSession, destroySession, isValidSession,
   verifyPin, readCookie, setSessionCookie, clearSessionCookie,
@@ -15,11 +16,15 @@ router.post('/login', rateLimit('staff-login', 8, 15 * 60 * 1000), (req, res) =>
   if (!pin) return res.status(400).json({ ok: false, error: 'PIN required' });
 
   if (!verifyPin(pin)) {
+    // A09: without this a failed login left no trace anywhere, so someone
+    // could grind the PIN indefinitely and be invisible. Alert on this event.
+    securityEvent('auth_failed', { client: clientKey(req) });
     return res.status(401).json({ ok: false, error: 'Incorrect PIN' });
   }
 
   const token = createSession();
   setSessionCookie(res, token);
+  securityEvent('auth_success', { client: clientKey(req) });
   res.json({ ok: true });
 });
 

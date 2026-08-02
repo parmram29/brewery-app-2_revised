@@ -5,6 +5,7 @@ const cors    = require('cors');
 const path    = require('path');
 const { assertAdminPinConfigured } = require('./lib/auth');
 const { getProvider } = require('./lib/payments');
+const { log } = require('./lib/log');
 
 const app = express();
 
@@ -39,6 +40,32 @@ app.use(helmet({
 
 app.disable('x-powered-by');
 
+// Proxy trust must be explicit, because both defaults are wrong somewhere:
+//   unset behind nginx/Cloudflare → req.ip is the proxy for every request, so
+//     all customers share one rate-limit bucket and one abuser locks out the
+//     whole restaurant.
+//   set with no proxy in front    → X-Forwarded-For is attacker-controlled, so
+//     every rate limit is bypassed by rotating a header value.
+// Set TRUST_PROXY only when something really does sit in front of Node.
+if (process.env.TRUST_PROXY) {
+  // A number is the hop count; nginx on the same host is 1.
+  const hops = Number(process.env.TRUST_PROXY);
+  app.set('trust proxy', Number.isFinite(hops) ? hops : process.env.TRUST_PROXY);
+}
+
+// Force HTTPS in production. Cookies carry the staff session and orders carry
+// customer PII; both are readable on the wire over plain HTTP. Runs before
+// anything else so no handler ever sees an unencrypted request.
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    const proto = req.get('x-forwarded-proto') || req.protocol;
+    if (proto !== 'https') {
+      return res.redirect(308, `https://${req.get('host')}${req.originalUrl}`);
+    }
+    next();
+  });
+}
+
 // CORS is closed by default. It used to reflect any origin, which combined with
 // cookie auth would let any site call staff endpoints with the staff cookie
 // attached. Same-origin requests from this server's own frontend need no CORS
@@ -52,11 +79,13 @@ app.use(cors(process.env.CORS_ORIGIN
 // the exact request bytes need the body unparsed; gateways that POST a form
 // need urlencoded. Getting this wrong makes every callback fail
 // verification, so it is driven off the provider rather than hard-coded.
+// Body limits are explicit everywhere: an unbounded parser is a trivial
+// memory-exhaustion DoS. A gateway callback is never larger than a few KB.
 const callbackFormat = getProvider().callbackBodyFormat;
 app.use('/api/payments/webhook',
-  callbackFormat === 'raw'  ? express.raw({ type: '*/*' })
-  : callbackFormat === 'form' ? express.urlencoded({ extended: false })
-  : express.json());
+  callbackFormat === 'raw'  ? express.raw({ type: '*/*', limit: '64kb' })
+  : callbackFormat === 'form' ? express.urlencoded({ extended: false, limit: '64kb' })
+  : express.json({ limit: '64kb' }));
 
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
@@ -80,10 +109,30 @@ app.use('/api', (req, res) => res.status(404).json({ ok: false, error: 'Not foun
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 // Central error handler — without this an async throw ends as a hung request.
+//
+// A10: the stack trace is logged server-side and never sent to the client.
+// Leaking file paths, library versions and query fragments to an attacker
+// hands them a map of the application for free.
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err.message);
+  log.error('unhandled_error', {
+    message: err.message,
+    path: req.originalUrl,
+    method: req.method,
+  });
+  if (err.stack) console.error(err.stack);
   if (res.headersSent) return next(err);
   res.status(500).json({ ok: false, error: 'Something went wrong' });
+});
+
+// A crash mid-request leaves the process in an unknown state. Log loudly so
+// it is alertable rather than a silent restart nobody notices.
+process.on('unhandledRejection', (reason) => {
+  log.error('unhandled_rejection', { message: reason?.message || String(reason) });
+});
+process.on('uncaughtException', (err) => {
+  log.error('uncaught_exception', { message: err.message });
+  console.error(err.stack);
+  process.exit(1);
 });
 
 // Refuse to boot with an unset or placeholder ADMIN_PIN rather than run with a

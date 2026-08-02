@@ -11,10 +11,27 @@ export class ApiClient {
 
   async request(method, path, body) {
     try {
-      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      const opts = {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        // Staff auth is an HttpOnly cookie; without this fetch omits it and
+        // every staff request comes back 401.
+        credentials: 'same-origin',
+      };
       if (body !== undefined) opts.body = JSON.stringify(body);
       const res = await fetch(this.baseUrl + path, opts);
-      return await res.json();
+
+      if (res.status === 401 && typeof this.onUnauthorized === 'function') {
+        this.onUnauthorized();
+      }
+
+      try {
+        return await res.json();
+      } catch {
+        // A non-JSON body (proxy error page, crash) would otherwise throw here
+        // and be reported as a network error, hiding the real status.
+        return { ok: false, error: `Server error (${res.status})` };
+      }
     } catch (err) {
       return { ok: false, error: 'Network error — is the server running?' };
     }

@@ -3,6 +3,7 @@ const express = require('express');
 const helmet  = require('helmet');
 const cors    = require('cors');
 const path    = require('path');
+const { assertAdminPinConfigured } = require('./lib/auth');
 
 const app = express();
 
@@ -35,7 +36,15 @@ app.use(helmet({
   },
 }));
 
-app.use(cors());
+app.disable('x-powered-by');
+
+// CORS is closed by default. It used to reflect any origin, which combined with
+// cookie auth would let any site call staff endpoints with the staff cookie
+// attached. Same-origin requests from this server's own frontend need no CORS
+// header at all; set CORS_ORIGIN only if a separate frontend host is added.
+app.use(cors(process.env.CORS_ORIGIN
+  ? { origin: process.env.CORS_ORIGIN, credentials: true }
+  : { origin: false }));
 
 // The Stripe webhook needs the raw request body to verify its signature, so it
 // must be registered before the global express.json() parser.
@@ -54,7 +63,24 @@ app.use('/api/sales',        require('./routes/sales'));
 app.use('/api/reservations', require('./routes/reservations'));
 
 app.get('/api/ping', (req, res) => res.json({ ok: true, message: 'Sweet & Crispy server running' }));
+
+// Unknown /api/* paths must return JSON 404, not the SPA's index.html — a
+// mistyped endpoint otherwise resolves as HTML and surfaces as a confusing
+// JSON parse error in the browser instead of a clear 404.
+app.use('/api', (req, res) => res.status(404).json({ ok: false, error: 'Not found' }));
+
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+
+// Central error handler — without this an async throw ends as a hung request.
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.message);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ ok: false, error: 'Something went wrong' });
+});
+
+// Refuse to boot with an unset or placeholder ADMIN_PIN rather than run with a
+// dashboard "protected" by a value published in .env.example.
+if (!assertAdminPinConfigured()) process.exit(1);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {

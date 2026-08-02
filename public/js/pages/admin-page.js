@@ -4,12 +4,12 @@ import { money, escapeHtml, fmt12 } from '../services/format.js';
  * Staff dashboard: auth gate, live orders, reservations, menu
  * visibility, today's special, and the sales report.
  *
- * Security note: the PIN gate here is a UX convenience, not the
- * access-control boundary — /api/auth/login is the actual check, and
- * it's a shared-PIN model appropriate for a small single-location team,
- * not a multi-user permission system. If staff accounts with individual
- * logins are ever needed, that check belongs server-side with
- * sessions/JWT, not just this client-side screen.
+ * Security note: this screen is a UX convenience, never the access-control
+ * boundary. Hiding the dashboard in the browser protects nothing — the real
+ * check is requireStaff() on every staff route server-side, which rejects a
+ * request without a valid session cookie no matter what the UI shows. Shared
+ * PIN is appropriate for one small team sharing one dashboard; individual
+ * staff accounts would be a per-user session rework, not a UI change.
  */
 export class AdminPage {
   constructor({ api, toast }) {
@@ -26,9 +26,18 @@ export class AdminPage {
     this.root.addEventListener('click', (e) => this.handleClick(e));
     this.root.addEventListener('keydown', (e) => this.handleKeydown(e));
     this.root.addEventListener('change', (e) => this.handleChange(e));
+
+    // If a session expires mid-shift, every later call 401s. Drop straight back
+    // to the PIN screen instead of leaving a dashboard that silently fails.
+    this.api.onUnauthorized = () => this.handleSessionExpired();
   }
 
-  onEnter() { /* admin has no auto-refresh on nav; login() populates everything */ }
+  // Restores the dashboard after a page refresh without re-entering the PIN,
+  // since the session lives in an HttpOnly cookie the page cannot read.
+  async onEnter() {
+    const res = await this.api.get('/api/auth/session');
+    if (res.ok && res.authenticated) this.showDashboard();
+  }
 
   handleKeydown(e) {
     if (e.target.id === 'pin-input' && e.key === 'Enter') this.login();
@@ -65,19 +74,41 @@ export class AdminPage {
 
   // ── Auth ──────────────────────────────────────────────────────
   async login() {
-    const pin = document.getElementById('pin-input').value;
-    const res = await this.api.post('/api/auth/login', { pin });
-    if (!res.ok) { this.toast.show('Wrong PIN', 'err'); document.getElementById('pin-input').value = ''; return; }
+    const input = document.getElementById('pin-input');
+    const res = await this.api.post('/api/auth/login', { pin: input.value });
+    input.value = '';
+    if (!res.ok) {
+      // Surfaces the server's message so a rate-limit lockout reads as such
+      // rather than looking like a wrong PIN.
+      this.toast.show(res.error || 'Wrong PIN', 'err');
+      return;
+    }
+    this.showDashboard();
+  }
+
+  async logout() {
+    // Destroys the session server-side — clearing the screen alone would leave
+    // a valid cookie that still authorises every staff endpoint.
+    await this.api.post('/api/auth/logout');
+    this.showGate();
+  }
+
+  showDashboard() {
     document.getElementById('admin-gate').style.display = 'none';
     document.getElementById('admin-dash').style.display = 'block';
     document.getElementById('res-date-filter').value = new Date().toISOString().split('T')[0];
     this.renderLiveOrders(); this.loadReservations(); this.loadMenu(); this.loadSpecials(); this.renderSales();
   }
 
-  logout() {
+  showGate() {
     document.getElementById('admin-gate').style.display = 'block';
     document.getElementById('admin-dash').style.display = 'none';
     document.getElementById('pin-input').value = '';
+  }
+
+  handleSessionExpired() {
+    this.showGate();
+    this.toast.show('Session expired — please sign in again', 'err');
   }
 
   switchTab(tab, btn) {

@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const db = require('../db/pool');
-router.get('/summary', async (req, res) => {
+const { requireStaff } = require('../lib/auth');
+router.get('/summary', requireStaff, async (req, res) => {
   try {
     const [[totals]] = await db.query(`
       SELECT
@@ -17,7 +18,7 @@ router.get('/summary', async (req, res) => {
     res.json({ ok: true, summary: { ...totals, ...today } });
   } catch (err) { res.status(500).json({ ok: false, error: 'Database error' }); }
 });
-router.get('/top-items', async (req, res) => {
+router.get('/top-items', requireStaff, async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   try {
     const [rows] = await db.query('SELECT * FROM top_items LIMIT ?', [limit]);

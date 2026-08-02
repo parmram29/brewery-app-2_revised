@@ -93,6 +93,28 @@ completed, `isConfigured()` returns false and the site quietly stays cash-only.
 merchant account, not of this code. Whichever gateway is configured handles the
 brands your account supports; nothing here changes per brand.
 
+**Apple Pay / Google Pay** are wallet buttons that appear on the *gateway's*
+hosted payment page when your merchant account has them enabled. They are not
+implemented here and do not need to be — there is no code to write, only a
+setting to switch on with the gateway. Two caveats worth knowing:
+
+- Apple Pay requires **domain verification**: Apple issues a file that must be
+  served at `/.well-known/apple-developer-merchantid-domain-association` on your
+  real domain. `public/.well-known/` is already served as static content, so
+  dropping the file there is all that is needed.
+- Both require **HTTPS**. They will not appear over plain HTTP.
+
+**JWT** (`lib/jwt.js`) is available for gateways that authenticate API calls with
+a signed token rather than a static key — `provider.signJwt(claims, secret)`.
+It is dependency-free HS256 and fixes the algorithm rather than reading it from
+the token header, which is the standard JWT bypass (`alg:none`). Use it only if
+your gateway's docs call for it. Note that a JWT authenticates *our request to
+the gateway*; it is never evidence that a payment succeeded.
+
+**"Sign in with Apple/Google"** is a different thing again — customer accounts,
+not payments. This site deliberately has no customer accounts: an order needs a
+name and a phone number, nothing more, which is one less credential to breach.
+
 Whatever the gateway, these properties are enforced by the provider contract:
 
 - **Card details never touch this server.** A provider returns a URL on the

@@ -41,14 +41,16 @@
       -->
       <div class="brand-card">
         <div class="bc-panel">
-          <svg class="bc-seal" viewBox="0 0 100 100" aria-hidden="true">
+          <svg class="bc-seal" viewBox="0 0 100 100" aria-hidden="true" xmlns:xlink="http://www.w3.org/1999/xlink">
             <defs>
               <path id="sealCirc" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0"/>
             </defs>
             <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" stroke-dasharray="2 4"/>
             <circle cx="50" cy="50" r="30" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/>
             <text font-size="7.2" fill="rgba(255,255,255,.92)" font-family="Inter, sans-serif" font-weight="700" letter-spacing="1.5">
-              <textPath href="#sealCirc" startOffset="2%">GRENADA &#8226; FAMILY-RUN &#8226; WOOD-FIRED &#8226;</textPath>
+              <!-- Both href and xlink:href: Safari only honours the plain
+                   href form on <textPath> in recent versions. -->
+              <textPath href="#sealCirc" xlink:href="#sealCirc" startOffset="2%">GRENADA &#8226; FAMILY-RUN &#8226; WOOD-FIRED &#8226;</textPath>
             </text>
             <text x="50" y="55" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="700" font-size="17" fill="#fff">S&amp;C</text>
           </svg>

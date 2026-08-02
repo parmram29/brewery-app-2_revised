@@ -38,7 +38,7 @@ button{font-family:inherit;}
 :focus-visible{outline:2px solid var(--terracotta);outline-offset:2px;border-radius:4px;}
 
 /* NAV */
-nav{background:rgba(250,246,238,.9);backdrop-filter:saturate(160%) blur(8px);border-bottom:1px solid var(--line);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:72px;position:sticky;top:0;z-index:200;}
+nav{background:rgba(250,246,238,.9);-webkit-backdrop-filter:saturate(160%) blur(8px);backdrop-filter:saturate(160%) blur(8px);border-bottom:1px solid var(--line);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:72px;position:sticky;top:0;z-index:200;}
 .logo{cursor:pointer;font-family:'Fraunces',serif;font-weight:600;font-size:1.18rem;color:var(--ink);display:flex;align-items:center;gap:.65rem;}
 /* Circular badge/seal instead of a plain wordmark dot — the emblem-style
    "logo" treatment, done in CSS so no image asset is needed. */

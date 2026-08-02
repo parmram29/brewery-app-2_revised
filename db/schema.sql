@@ -59,8 +59,8 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_method   ENUM('card','cash') NULL,
   payment_status   ENUM('unpaid','paid','failed') NOT NULL DEFAULT 'unpaid',
   -- Gateway-neutral: which provider handled it, and that provider's reference
-  -- for the attempt. Named generically so switching gateways (Stripe →
-  -- Republic Bank EPay) is not a schema migration.
+  -- for the attempt. Named generically so switching gateways (EPay ↔ WiPay)
+  -- is not a schema migration.
   payment_provider VARCHAR(20)  NULL,
   payment_ref      VARCHAR(255) NULL,
   paid_at          TIMESTAMP     NULL,

@@ -49,8 +49,8 @@ app.use(cors(process.env.CORS_ORIGIN
 
 // The payment callback's body parser depends on the active provider, and must
 // be registered before the global express.json(). Signature schemes that hash
-// the exact request bytes (Stripe) need the body unparsed; bank gateways that
-// POST a form need urlencoded. Getting this wrong makes every callback fail
+// the exact request bytes need the body unparsed; gateways that POST a form
+// need urlencoded. Getting this wrong makes every callback fail
 // verification, so it is driven off the provider rather than hard-coded.
 const callbackFormat = getProvider().callbackBodyFormat;
 app.use('/api/payments/webhook',

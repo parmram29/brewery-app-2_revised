@@ -4,7 +4,7 @@ import { Cart } from '../services/cart.js';
 
 /**
  * Menu browsing (Pizza / Food tabs, subcategory dropdowns) + cart +
- * checkout (Stripe Checkout for card, or cash on pickup).
+ * checkout (hosted gateway page for card, or cash on pickup).
  *
  * Security note: the cart is UI state only. The server (routes/orders.js)
  * re-resolves every item's price and name from the database when the order
@@ -270,7 +270,7 @@ export class OrderPage {
   }
 
   /**
-   * Handles the redirect back from Stripe Checkout. Success/cancel state is
+   * Handles the redirect back from the gateway. Success/cancel state is
    * carried in the URL (?paid=1&ref=... / ?paycancelled=1&ref=...) — the
    * actual payment confirmation already happened server-side via the
    * webhook, this just reflects that back to the customer.

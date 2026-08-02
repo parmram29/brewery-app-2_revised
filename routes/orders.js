@@ -105,7 +105,7 @@ router.get('/track/:ref', async (req, res) => {
 // POST /api/orders — create a new order from a cart. Items are re-priced from the
 // database on every request. payment_method chooses the next step on the client:
 // 'cash' orders are confirmed immediately (pay at pickup); 'card' orders still need
-// a Stripe Checkout Session created via /api/payments/checkout-session.
+// a hosted payment started via /api/payments/checkout-session.
 router.post('/', rateLimit('create-order', 15, 10 * 60 * 1000), async (req, res) => {
   const { customer_name, phone, notes, items, payment_method } = req.body;
   const name = (customer_name || '').trim();
@@ -194,7 +194,7 @@ router.patch('/:id/items', requireStaff, async (req, res) => {
 });
 
 // PATCH /api/orders/:id/payment — staff-only: confirm a cash payment was collected.
-// Card payments are marked paid exclusively by the Stripe webhook, never from here.
+// Card payments are marked paid exclusively by the verified gateway callback.
 router.patch('/:id/payment', requireStaff, async (req, res) => {
   const { payment_status } = req.body;
   if (!['paid', 'unpaid'].includes(payment_status)) return res.status(400).json({ ok: false, error: 'Invalid payment status' });
@@ -215,7 +215,7 @@ router.patch('/:id/payment', requireStaff, async (req, res) => {
 // Note: payment_method is deliberately NOT accepted here. It used to be, which
 // allowed a card order to be relabelled 'cash' and then marked paid via
 // /payment above — marking an order paid without any money moving. How an
-// order was paid is decided at creation and, for card, only by Stripe.
+// order was paid is decided at creation and, for card, only by the gateway.
 router.patch('/:id/status', requireStaff, async (req, res) => {
   const { status } = req.body;
   const allowed = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'];

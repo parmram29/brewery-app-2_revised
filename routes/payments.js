@@ -1,9 +1,9 @@
 // ============================================================
 // Payment routes — provider-agnostic.
 //
-// Nothing here knows which gateway is in use. Swapping Stripe for
-// Republic Bank EPay is PAYMENT_PROVIDER=epay plus a completed
-// lib/payments/epay.js; this file does not change.
+// Nothing here knows which gateway is in use. Switching between Republic
+// Bank EPay and WiPay is a PAYMENT_PROVIDER change plus a completed
+// provider file; this file does not change.
 // ============================================================
 
 const router = require('express').Router();

@@ -146,14 +146,14 @@ router.post('/', rateLimit('create-order', 15, 10 * 60 * 1000), async (req, res)
 
 // PATCH /api/orders/:id/items — staff-only correction of an order's contents
 // ("customer called and wants to swap an item"), allowed only while the order
-// is still pending, unpaid, and has no Stripe Checkout Session attached.
+// is still pending, unpaid, and has no payment attempt in flight.
 //
 // Both restrictions matter. This was previously public AND allowed edits after
-// a Checkout Session existed, which is a free-food exploit: place a cheap
-// order, open checkout, add expensive items to the order, then pay the original
-// cheap session. The webhook marks it paid and the kitchen makes the expensive
-// items. Once a session is created the priced basket is frozen — a changed
-// order means a new session.
+// a checkout had started, which is a free-food exploit: place a cheap order,
+// open checkout, add expensive items to the order, then pay the original cheap
+// payment page. The callback marks it paid and the kitchen makes the expensive
+// items. Once a payment attempt exists the priced basket is frozen — a changed
+// order means a new payment.
 router.patch('/:id/items', requireStaff, async (req, res) => {
   const { items } = req.body;
   const conn = await db.getConnection();
@@ -163,7 +163,7 @@ router.patch('/:id/items', requireStaff, async (req, res) => {
     if (order.status !== 'pending' || order.payment_status === 'paid') {
       return res.status(409).json({ ok: false, error: 'This order can no longer be edited' });
     }
-    if (order.stripe_session_id) {
+    if (order.payment_ref) {
       return res.status(409).json({
         ok: false,
         error: 'Checkout has already started for this order — cancel it and place a new one to change the items.',

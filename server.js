@@ -4,6 +4,7 @@ const helmet  = require('helmet');
 const cors    = require('cors');
 const path    = require('path');
 const { assertAdminPinConfigured } = require('./lib/auth');
+const { getProvider } = require('./lib/payments');
 
 const app = express();
 
@@ -46,9 +47,16 @@ app.use(cors(process.env.CORS_ORIGIN
   ? { origin: process.env.CORS_ORIGIN, credentials: true }
   : { origin: false }));
 
-// The Stripe webhook needs the raw request body to verify its signature, so it
-// must be registered before the global express.json() parser.
-app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+// The payment callback's body parser depends on the active provider, and must
+// be registered before the global express.json(). Signature schemes that hash
+// the exact request bytes (Stripe) need the body unparsed; bank gateways that
+// POST a form need urlencoded. Getting this wrong makes every callback fail
+// verification, so it is driven off the provider rather than hard-coded.
+const callbackFormat = getProvider().callbackBodyFormat;
+app.use('/api/payments/webhook',
+  callbackFormat === 'raw'  ? express.raw({ type: '*/*' })
+  : callbackFormat === 'form' ? express.urlencoded({ extended: false })
+  : express.json());
 
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));

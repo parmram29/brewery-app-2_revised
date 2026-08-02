@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const db = require('../db/pool');
 const { makeRef, rateLimit } = require('../lib/security');
+const { log } = require('../lib/log');
 const { requireStaff } = require('../lib/auth');
 
 const MAX_QTY = 20;
@@ -89,8 +90,17 @@ router.get('/', requireStaff, async (req, res) => {
   } catch (err) { res.status(500).json({ ok: false, error: 'Database error' }); }
 });
 
-// GET /api/orders/track/:ref — customer-facing lookup by order reference (no admin data)
-router.get('/track/:ref', async (req, res) => {
+// GET /api/orders/track/:ref — customer-facing lookup by order reference.
+//
+// The reference IS the capability, so this is rate limited: unthrottled, an
+// attacker can grind references until one hits and read stranger's orders.
+// The reference is 64 bits (lib/security.js), which makes that impractical on
+// its own; the limit is defence in depth so a leaked-and-shortened reference,
+// or a future change to makeRef, cannot silently reopen enumeration.
+//
+// Returns no customer_name, phone or internal id — deliberately narrower than
+// the staff view, so a leaked reference exposes an order, not a person.
+router.get('/track/:ref', rateLimit('track-order', 30, 10 * 60 * 1000), async (req, res) => {
   try {
     const [rows] = await db.query(
       'SELECT id, order_ref, status, payment_method, payment_status, subtotal_ec, total_ec, created_at FROM orders WHERE order_ref = ?',
@@ -98,8 +108,15 @@ router.get('/track/:ref', async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ ok: false, error: 'Order not found' });
     await attachItems(rows);
-    res.json({ ok: true, order: rows[0] });
-  } catch (err) { res.status(500).json({ ok: false, error: 'Database error' }); }
+    // `id` is needed to join the items but must not be returned: it is the
+    // sequential internal key, and handing it out invites people to probe
+    // id-based endpoints. Stripped so the response matches the docstring.
+    const { id, ...order } = rows[0];
+    res.json({ ok: true, order });
+  } catch (err) {
+    log.error('order_track_failed', { message: err.message });
+    res.status(500).json({ ok: false, error: 'Database error' });
+  }
 });
 
 // POST /api/orders — create a new order from a cart. Items are re-priced from the
@@ -204,10 +221,18 @@ router.patch('/:id/payment', requireStaff, async (req, res) => {
     if (order.payment_method !== 'cash') return res.status(400).json({ ok: false, error: 'Only cash orders can be marked paid here' });
     await db.query('UPDATE orders SET payment_status = ?, paid_at = ? WHERE id = ?',
       [payment_status, payment_status === 'paid' ? new Date() : null, req.params.id]);
-    await db.query(
-      'INSERT INTO payment_events (order_id, event, method, amount_ec, detail) VALUES (?, ?, ?, ?, ?)',
-      [order.id, payment_status === 'paid' ? 'cash_confirmed' : 'cash_unconfirmed', 'cash', order.total_ec, 'Set by staff']
-    ).catch(() => {});
+    // A10: this was `.catch(() => {})`. Silently dropping a write to the
+    // payment audit log is a compliance defect — reconciliation and dispute
+    // handling depend on it. Still non-fatal (the money event already
+    // happened), but it must be visible.
+    try {
+      await db.query(
+        'INSERT INTO payment_events (order_id, event, method, amount_ec, detail) VALUES (?, ?, ?, ?, ?)',
+        [order.id, payment_status === 'paid' ? 'cash_confirmed' : 'cash_unconfirmed', 'cash', order.total_ec, 'Set by staff']
+      );
+    } catch (auditErr) {
+      log.error('audit_write_failed', { table: 'payment_events', order_id: order.id, message: auditErr.message });
+    }
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ ok: false, error: 'Database error' }); }
 });

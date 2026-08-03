@@ -182,6 +182,11 @@ export class OrderPage {
 
   renderCartPanel() {
     const { cart } = this;
+    // With no card gateway live there is exactly one way to pay, so the
+    // selection is forced rather than left on its 'card' default. Without
+    // this the hidden tile could still submit payment_method:'card' and the
+    // order would sit unpaid waiting for a checkout that can never start.
+    if (!this.menuStore.cardPaymentsEnabled) this.payMethod = 'cash';
     return `
     <div class="cart-panel">
       <h3>Your Order</h3>
@@ -209,12 +214,22 @@ export class OrderPage {
       <div class="field"><label>Your Name</label><input id="ord-name" placeholder="First &amp; last name"></div>
       <div class="field"><label>Phone</label><input id="ord-phone" type="tel" placeholder="+1 (473) …"></div>
       <div class="field"><label>Notes (optional)</label><textarea id="ord-notes" placeholder="Allergies, extra sauce, pickup time…"></textarea></div>
-      <label style="display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:.35rem;font-weight:600">Payment Method</label>
+      <label style="display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:.35rem;font-weight:600">Payment</label>
+      ${this.menuStore.cardPaymentsEnabled ? `
       <div class="pay-method-row">
-        <div class="pm-btn${this.payMethod === 'card' ? ' on' : ''}" data-action="set-pay-method" data-method="card"><span class="pm-icon">💳</span>Pay by Card</div>
-        <div class="pm-btn${this.payMethod === 'cash' ? ' on' : ''}" data-action="set-pay-method" data-method="cash"><span class="pm-icon">💵</span>Pay by Cash</div>
-      </div>
-      ${this.payMethod === 'card' && !this.menuStore.cardPaymentsEnabled ? '<div style="font-size:.75rem;color:var(--terracotta);margin:-.3rem 0 .8rem">Card payments are being set up — choose cash for now, or message us on WhatsApp.</div>' : ''}
+        <button type="button" class="pm-btn${this.payMethod === 'card' ? ' on' : ''}" data-action="set-pay-method" data-method="card" aria-pressed="${this.payMethod === 'card'}"><span class="pm-icon">💳</span>Pay by Card</button>
+        <button type="button" class="pm-btn${this.payMethod === 'cash' ? ' on' : ''}" data-action="set-pay-method" data-method="cash" aria-pressed="${this.payMethod === 'cash'}"><span class="pm-icon">💵</span>Pay by Cash</button>
+      </div>` : `
+      <!-- No card gateway is live, so the card tile is hidden rather than shown
+           and then explained away. It returns automatically the moment a
+           provider is configured — nothing here needs editing. -->
+      <div class="pay-single">
+        <span class="pm-icon">💵</span>
+        <div>
+          <strong>Pay with cash on pickup</strong>
+          <div class="pay-single-sub">Have ${money(cart.subtotal)} ready when you collect. We'll confirm your order by WhatsApp.</div>
+        </div>
+      </div>`}
       <button class="btn btn-fill btn-block" id="place-order-btn" data-action="place-order">Place Order — ${money(cart.subtotal)}</button>
       `}
     </div>`;
@@ -259,8 +274,9 @@ export class OrderPage {
         <h2>Order Received! 🎉</h2>
         <div class="order-ref">${escapeHtml(order.order_ref)}</div>
         <p>${method === 'cash'
-          ? `Thanks, ${escapeHtml(order.customer_name)}! Please have ${money(order.total_ec)} ready to pay by cash when you collect your order.`
+          ? `Thanks${order.customer_name ? ', ' + escapeHtml(order.customer_name) : ''}! Have <strong>${money(order.total_ec)}</strong> ready when you collect — we'll confirm your payment at pickup.`
           : `Thanks! Your payment of ${money(order.total_ec)} is confirmed.`}</p>
+        <p style="font-size:.85rem">Keep this reference handy — it's how we find your order.</p>
         <p>We'll message you on WhatsApp if we need anything — feel free to reach out too.</p>
         <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:1rem">
           <a class="btn btn-olive" href="${waLink(this.menuStore.whatsapp, 'Hi! Just placed order ' + order.order_ref)}" target="_blank" rel="noopener">Message Us on WhatsApp</a>

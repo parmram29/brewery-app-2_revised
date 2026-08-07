@@ -9,6 +9,27 @@ const { log } = require('./lib/log');
 
 const app = express();
 
+// Refuse to run with an unset or placeholder ADMIN_PIN rather than run with a
+// dashboard "protected" by a value published in .env.example.
+//
+// On a normal long-lived process (local dev, a VPS) process.exit() is the
+// right call — it fails loudly the moment someone starts the server. On a
+// serverless platform (Vercel) this file is `require()`d fresh per request
+// instead of run once; calling process.exit() there kills the entire
+// function runtime and turns a config mistake into an opaque
+// FUNCTION_INVOCATION_FAILED crash with no useful message. So on serverless,
+// refuse every request with a clear error instead of exiting the process.
+const adminPinConfigured = assertAdminPinConfigured();
+if (!adminPinConfigured) {
+  if (require.main === module) {
+    process.exit(1);
+  }
+  app.use((req, res) => res.status(500).json({
+    ok: false,
+    error: 'Server misconfigured: ADMIN_PIN is not set, or is too weak. Set a real ADMIN_PIN (8+ characters) in your deployment’s environment variables.',
+  }));
+}
+
 // Sets standard defensive headers (X-Content-Type-Options, X-Frame-Options,
 // Referrer-Policy, HSTS, etc).
 //
@@ -134,10 +155,6 @@ process.on('uncaughtException', (err) => {
   console.error(err.stack);
   process.exit(1);
 });
-
-// Refuse to boot with an unset or placeholder ADMIN_PIN rather than run with a
-// dashboard "protected" by a value published in .env.example.
-if (!assertAdminPinConfigured()) process.exit(1);
 
 // Vercel's @vercel/node builder imports this file and calls the exported app
 // directly per-request — it never runs this file as a standalone process, so

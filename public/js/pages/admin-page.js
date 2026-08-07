@@ -1,8 +1,8 @@
-import { money, escapeHtml, fmt12 } from '../services/format.js';
+import { money, escapeHtml } from '../services/format.js';
 
 /**
- * Staff dashboard: auth gate, live orders, reservations, menu
- * visibility, today's special, and the sales report.
+ * Staff dashboard: auth gate, live orders, menu visibility, today's
+ * special, and the sales report.
  *
  * Security note: this screen is a UX convenience, never the access-control
  * boundary. Hiding the dashboard in the browser protects nothing — the real
@@ -18,7 +18,6 @@ export class AdminPage {
     this.root = document.getElementById('page-admin');
 
     this.liveFilter = 'pending';
-    this.resFilter = 'all';
     this.menuCat = 'pizza';
     this.specials = [];
     this.menuItems = [];
@@ -43,10 +42,6 @@ export class AdminPage {
     if (e.target.id === 'pin-input' && e.key === 'Enter') this.login();
   }
 
-  handleChange(e) {
-    if (e.target.id === 'res-date-filter') this.loadReservations();
-  }
-
   handleClick(e) {
     const t = e.target.closest('[data-action]');
     if (!t) return;
@@ -59,10 +54,6 @@ export class AdminPage {
       case 'filter-live':      this.setLiveFilter(d.status, t); break;
       case 'set-order-status': this.setOrderStatus(parseInt(d.id), d.status); break;
       case 'mark-cash-paid':   this.markCashPaid(parseInt(d.id)); break;
-
-      case 'filter-res-status': this.setResFilter(d.status, t); break;
-      case 'save-capacity':     this.saveCapacity(); break;
-      case 'set-res-status':    this.setReservationStatus(parseInt(d.id), d.status); break;
 
       case 'filter-menu-cat':  this.setMenuCat(d.cat, t); break;
       case 'toggle-menu-item': this.toggleMenuItem(parseInt(d.id)); break;
@@ -96,8 +87,7 @@ export class AdminPage {
   showDashboard() {
     document.getElementById('admin-gate').style.display = 'none';
     document.getElementById('admin-dash').style.display = 'block';
-    document.getElementById('res-date-filter').value = new Date().toISOString().split('T')[0];
-    this.renderLiveOrders(); this.loadReservations(); this.loadMenu(); this.loadSpecials(); this.renderSales();
+    this.renderLiveOrders(); this.loadMenu(); this.loadSpecials(); this.renderSales();
   }
 
   showGate() {
@@ -117,7 +107,6 @@ export class AdminPage {
     document.getElementById('ap-' + tab).classList.add('on');
     btn.classList.add('on');
     if (tab === 'live')         this.renderLiveOrders();
-    if (tab === 'reservations') this.loadReservations();
     if (tab === 'menu')         this.loadMenu();
     if (tab === 'specials')     this.loadSpecials();
     if (tab === 'sales')        this.renderSales();
@@ -165,58 +154,6 @@ export class AdminPage {
   async markCashPaid(id) {
     const res = await this.api.patch(`/api/orders/${id}/payment`, { payment_status: 'paid' });
     if (res.ok) { this.renderLiveOrders(); this.toast.show('Marked as paid', 'ok'); } else this.toast.show('Error: ' + res.error, 'err');
-  }
-
-  // ── Reservations ──────────────────────────────────────────────
-  setResFilter(status, btn) {
-    this.resFilter = status;
-    this.root.querySelectorAll('#ap-reservations .order-cat-btn').forEach(b => b.classList.remove('on'));
-    btn.classList.add('on');
-    this.loadReservations();
-  }
-
-  async loadReservations() {
-    const sr = await this.api.get('/api/reservations/admin/settings');
-    if (sr.ok) document.getElementById('max-covers-input').value = sr.settings.max_covers_per_slot || 20;
-
-    const date = document.getElementById('res-date-filter')?.value || '';
-    const params = [];
-    if (date) params.push('date=' + date);
-    if (this.resFilter !== 'all') params.push('status=' + this.resFilter);
-    const url = '/api/reservations' + (params.length ? '?' + params.join('&') : '');
-
-    const res = await this.api.get(url);
-    const el = document.getElementById('admin-res-list');
-    if (!res.ok) { el.innerHTML = '<p style="color:var(--ink-dim)">Could not load reservations.</p>'; return; }
-    if (!res.reservations.length) { el.innerHTML = '<p style="color:var(--ink-soft);font-style:italic;text-align:center;padding:2rem">No reservations for this date.</p>'; return; }
-    el.innerHTML = res.reservations.map(r => `
-      <div class="res-card">
-        <div class="res-card-info">
-          <div class="res-name">${escapeHtml(r.guest_name)} <span style="font-size:.72rem;color:var(--ink-dim)">${escapeHtml(r.ref)}</span></div>
-          <div class="res-detail">
-            ${fmt12(r.res_time)} · ${r.party_size} guest${r.party_size > 1 ? 's' : ''}
-            ${r.phone ? `· ${escapeHtml(r.phone)}` : ''}
-            <span class="badge b-${r.status}" style="margin-left:.4rem">${r.status}</span>
-          </div>
-          ${r.notes ? `<div style="font-size:.75rem;color:var(--ink-dim);margin-top:.25rem">Note: ${escapeHtml(r.notes)}</div>` : ''}
-        </div>
-        <div class="res-card-actions">
-          ${r.status !== 'seated' ? `<button class="st-btn" data-action="set-res-status" data-id="${r.id}" data-status="seated">Seat ✓</button>` : ''}
-          ${r.status !== 'no-show' ? `<button class="st-btn" data-action="set-res-status" data-id="${r.id}" data-status="no-show">No-show</button>` : ''}
-          ${r.status !== 'cancelled' ? `<button class="del-btn" data-action="set-res-status" data-id="${r.id}" data-status="cancelled">Cancel</button>` : ''}
-        </div>
-      </div>`).join('');
-  }
-
-  async setReservationStatus(id, status) {
-    const res = await this.api.patch(`/api/reservations/${id}/status`, { status });
-    if (res.ok) { this.loadReservations(); this.toast.show('Updated to ' + status, 'ok'); } else this.toast.show('Error: ' + res.error, 'err');
-  }
-
-  async saveCapacity() {
-    const val = document.getElementById('max-covers-input').value;
-    const res = await this.api.patch('/api/reservations/admin/settings', { max_covers_per_slot: val });
-    if (res.ok) this.toast.show('Capacity saved — ' + val + ' covers per slot', 'ok'); else this.toast.show('Error saving', 'err');
   }
 
   // ── Menu visibility ───────────────────────────────────────────

@@ -22,6 +22,14 @@ export class HomePage {
       photo.style.display = 'none';
       photo.nextElementSibling.style.display = 'flex';
     }, { once: true });
+
+    // Same fallback pattern for the "Our Story" photo at
+    // public/images/story-pizza.jpg.
+    const storyPhoto = document.getElementById('story-photo');
+    storyPhoto.addEventListener('error', () => {
+      storyPhoto.style.display = 'none';
+      storyPhoto.nextElementSibling.style.display = 'flex';
+    }, { once: true });
   }
 
   async onEnter() {

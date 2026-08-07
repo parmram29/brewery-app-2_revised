@@ -105,15 +105,24 @@
         <p>Every pizza is stretched by hand and every plate comes out the way we'd serve it to our own family. No shortcuts, no fuss — just honest cooking, Grenada-style.</p>
         <button class="btn btn-outline btn-sm" data-action="go-to" data-page="about" style="margin-top:.5rem">Read More About Us</button>
       </div>
-      <div class="story-art">
-        <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="100" cy="100" r="86" stroke-dasharray="4 6"/>
-          <path d="M100 30 L165 130 A72 72 0 0 1 35 130 Z"/>
-          <circle cx="80" cy="90" r="5" fill="currentColor" stroke="none"/>
-          <circle cx="118" cy="78" r="5" fill="currentColor" stroke="none"/>
-          <circle cx="100" cy="112" r="5" fill="currentColor" stroke="none"/>
-          <circle cx="130" cy="105" r="5" fill="currentColor" stroke="none"/>
-        </svg>
+      <!--
+        Drop a real photo at public/images/story-pizza.jpg (any size, it's
+        cropped to fit) and it replaces the illustration automatically; if
+        that file doesn't exist yet, the <img> below 404s and its onerror
+        reveals the hand-drawn fallback illustration instead.
+      -->
+      <div class="story-photo">
+        <img src="/images/story-pizza.jpg" alt="Fresh pizzas boxed up for delivery" id="story-photo">
+        <div class="story-art-fallback">
+          <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1.6">
+            <circle cx="100" cy="100" r="86" stroke-dasharray="4 6"/>
+            <path d="M100 30 L165 130 A72 72 0 0 1 35 130 Z"/>
+            <circle cx="80" cy="90" r="5" fill="currentColor" stroke="none"/>
+            <circle cx="118" cy="78" r="5" fill="currentColor" stroke="none"/>
+            <circle cx="100" cy="112" r="5" fill="currentColor" stroke="none"/>
+            <circle cx="130" cy="105" r="5" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
       </div>
     </div>
 
@@ -197,7 +206,6 @@
       <div class="admin-layout">
         <div class="admin-sidebar">
           <button class="asb on" data-action="switch-tab" data-tab="live">Live Orders</button>
-          <button class="asb" data-action="switch-tab" data-tab="reservations">Reservations</button>
           <button class="asb" data-action="switch-tab" data-tab="menu">Menu</button>
           <button class="asb" data-action="switch-tab" data-tab="specials">Today's Special</button>
           <button class="asb" data-action="switch-tab" data-tab="sales">Sales Report</button>
@@ -215,30 +223,6 @@
               <button class="order-cat-btn btn-sm" data-action="filter-live" data-status="all">All</button>
             </div>
             <div id="live-list"></div>
-          </div>
-
-          <!-- RESERVATIONS -->
-          <div class="ap" id="ap-reservations">
-            <h3>Reservations</h3>
-            <p class="sub">All bookings — filter by date. Update status as guests arrive.</p>
-            <div class="capacity-box">
-              <label>Max covers per time slot</label>
-              <input type="number" id="max-covers-input" value="20" min="1" max="200">
-              <button class="btn btn-fill btn-sm" data-action="save-capacity">Save</button>
-            </div>
-            <div class="row" style="margin-bottom:1.25rem">
-              <div class="field tight">
-                <label>Filter by Date</label>
-                <input type="date" id="res-date-filter">
-              </div>
-              <div class="row-btns tight">
-                <button class="order-cat-btn on btn-sm" data-action="filter-res-status" data-status="all">All</button>
-                <button class="order-cat-btn btn-sm" data-action="filter-res-status" data-status="confirmed">Confirmed</button>
-                <button class="order-cat-btn btn-sm" data-action="filter-res-status" data-status="seated">Seated</button>
-                <button class="order-cat-btn btn-sm" data-action="filter-res-status" data-status="no-show">No-show</button>
-              </div>
-            </div>
-            <div id="admin-res-list"></div>
           </div>
 
           <!-- MENU -->

@@ -150,6 +150,10 @@ nav{background:rgba(250,246,238,.9);-webkit-backdrop-filter:saturate(160%) blur(
 .story-grid p{color:var(--ink-soft);font-size:.98rem;line-height:1.8;margin-bottom:1rem;}
 .story-art{display:flex;align-items:center;justify-content:center;}
 .story-art svg{width:100%;max-width:280px;color:var(--terracotta);}
+.story-photo{position:relative;background:var(--cream-2);border-radius:16px;overflow:hidden;aspect-ratio:4/3;}
+.story-photo img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;}
+.story-photo .story-art-fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;padding:1.25rem;}
+.story-photo .story-art-fallback svg{width:100%;max-width:200px;color:var(--terracotta);}
 
 /* SIGNATURE PICKS */
 .sig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:12px;overflow:hidden;margin-bottom:1rem;}
@@ -386,7 +390,7 @@ footer .foot-line{font-size:.85rem;color:rgba(240,235,220,.85);margin-bottom:.5r
   .order-layout,.res-layout{grid-template-columns:1fr;}
   .cart-panel{position:static;}
   .story-grid{grid-template-columns:1fr;}
-  .story-art{order:-1;}
+  .story-art,.story-photo{order:-1;}
   .about-grid{grid-template-columns:1fr;}
   .footer-grid{grid-template-columns:1fr;gap:1.5rem;}
 }

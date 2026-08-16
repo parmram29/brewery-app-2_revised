@@ -17,19 +17,28 @@ export class HomePage {
 
     // Falls back to the hand-drawn illustration if no real photo has been
     // placed at public/images/hero-pizza.jpg yet.
-    const photo = document.getElementById('hero-photo');
-    photo.addEventListener('error', () => {
-      photo.style.display = 'none';
-      photo.nextElementSibling.style.display = 'flex';
-    }, { once: true });
+    //
+    // A plain addEventListener('error', ...) is a race on fast static
+    // hosting: the image can finish loading (and failing) before this
+    // deferred module script even runs, so the 'error' event fires and is
+    // missed entirely, leaving the browser's default broken-image icon on
+    // screen. img.complete + naturalWidth catches that already-settled
+    // state too, on top of still listening for a future failure.
+    this.wireImageFallback('hero-photo');
+    this.wireImageFallback('story-photo');
+  }
 
-    // Same fallback pattern for the "Our Story" photo at
-    // public/images/story-pizza.jpg.
-    const storyPhoto = document.getElementById('story-photo');
-    storyPhoto.addEventListener('error', () => {
-      storyPhoto.style.display = 'none';
-      storyPhoto.nextElementSibling.style.display = 'flex';
-    }, { once: true });
+  wireImageFallback(id) {
+    const img = document.getElementById(id);
+    const showFallback = () => {
+      img.style.display = 'none';
+      img.nextElementSibling.style.display = 'flex';
+    };
+    if (img.complete) {
+      if (img.naturalWidth === 0) showFallback();
+    } else {
+      img.addEventListener('error', showFallback, { once: true });
+    }
   }
 
   async onEnter() {

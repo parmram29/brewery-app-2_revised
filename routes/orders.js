@@ -3,6 +3,7 @@ const db = require('../db/pool');
 const { makeRef, rateLimit } = require('../lib/security');
 const { log } = require('../lib/log');
 const { requireStaff } = require('../lib/auth');
+const { notifyNewOrder } = require('../lib/notify');
 
 const MAX_QTY = 20;
 const MAX_LINES = 30;
@@ -155,6 +156,10 @@ router.post('/', rateLimit('create-order', 15, 10 * 60 * 1000), async (req, res)
     const [newItems] = await conn.query('SELECT * FROM order_items WHERE order_id = ?', [orderResult.insertId]);
     newOrder[0].items = newItems;
     res.status(201).json({ ok: true, order: newOrder[0] });
+    // Cash orders are confirmed the moment they're placed — notify now. Card
+    // orders aren't real yet (checkout hasn't happened, or could be
+    // abandoned); those notify from the payment webhook once actually paid.
+    if (payment_method === 'cash') notifyNewOrder(newOrder[0]);
   } catch (err) {
     await conn.rollback();
     res.status(500).json({ ok: false, error: 'Could not save order' });

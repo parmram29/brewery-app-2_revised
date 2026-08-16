@@ -1,7 +1,7 @@
 {
   "name": "sweet-crispy",
   "version": "1.0.0",
-  "description": "Sweet & Crispy \u2014 family-run pizzeria & kitchen, Grenada \u2014 Order & Reservation System",
+  "description": "Sweet & Crispy \u2014 family-run pizzeria & kitchen, Grenada. Static menu + WhatsApp ordering; server.js is a legacy backend kept temporarily, unused by the live site.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

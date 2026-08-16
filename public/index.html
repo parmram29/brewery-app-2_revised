@@ -22,9 +22,6 @@
     <button class="nav-btn" data-action="go-to" data-page="about">About &amp; Contact</button>
     <button class="nav-btn order-nav" data-action="go-to" data-page="pay">Order Now</button>
   </div>
-  <div class="nav-right">
-    <button class="staff-link" data-action="go-to" data-page="admin">Staff</button>
-  </div>
 </nav>
 
 <!-- ═══════════ HOME ═══════════ -->
@@ -183,94 +180,6 @@
     </div>
   </div>
   <div id="pay-footer"></div>
-</div>
-
-<!-- ═══════════ ADMIN ═══════════ -->
-<div id="page-admin" class="page">
-  <div class="wrap">
-    <div id="admin-gate">
-      <div class="login-box">
-        <h2>Staff Access</h2>
-        <p>Enter your PIN to access management</p>
-        <div class="field"><label>PIN</label>
-        <input type="password" id="pin-input" placeholder="••••"></div>
-        <button class="btn btn-fill btn-block" data-action="login">Enter</button>
-      </div>
-    </div>
-    <div id="admin-dash" style="display:none">
-      <div class="row" style="padding:1.5rem 0 .5rem;justify-content:space-between;">
-        <h2 style="font-size:1.6rem">Management</h2>
-        <button class="del-btn" data-action="logout">Log out</button>
-      </div>
-      <div class="admin-layout">
-        <div class="admin-sidebar">
-          <button class="asb on" data-action="switch-tab" data-tab="live">Live Orders</button>
-          <button class="asb" data-action="switch-tab" data-tab="menu">Menu</button>
-          <button class="asb" data-action="switch-tab" data-tab="specials">Today's Special</button>
-          <button class="asb" data-action="switch-tab" data-tab="sales">Sales Report</button>
-        </div>
-        <div>
-
-          <!-- LIVE ORDERS -->
-          <div class="ap on" id="ap-live">
-            <h3>Live Orders</h3>
-            <p class="sub">Incoming orders — update status as you go. Card orders are marked paid automatically by Stripe; confirm cash orders here.</p>
-            <div class="row tight" style="margin-bottom:1rem">
-              <button class="order-cat-btn on btn-sm" data-action="filter-live" data-status="pending">Pending</button>
-              <button class="order-cat-btn btn-sm" data-action="filter-live" data-status="preparing">Preparing</button>
-              <button class="order-cat-btn btn-sm" data-action="filter-live" data-status="ready">Ready</button>
-              <button class="order-cat-btn btn-sm" data-action="filter-live" data-status="all">All</button>
-            </div>
-            <div id="live-list"></div>
-          </div>
-
-          <!-- MENU -->
-          <div class="ap" id="ap-menu">
-            <h3>Menu</h3>
-            <p class="sub">Show or hide items from the ordering page. Every item is seeded from the current menu.</p>
-            <div class="order-cats" style="justify-content:flex-start;margin-bottom:1.25rem">
-              <button class="order-cat-btn on" data-action="filter-menu-cat" data-cat="pizza">Pizza</button>
-              <button class="order-cat-btn" data-action="filter-menu-cat" data-cat="food">Food</button>
-            </div>
-            <div id="admin-menu-list"></div>
-          </div>
-
-          <!-- SPECIALS -->
-          <div class="ap" id="ap-specials">
-            <h3>Today's Special</h3>
-            <p class="sub">Feature a dish on the homepage — goes live immediately</p>
-            <div class="field"><label>Item Name</label>
-            <input type="text" id="sp-name" placeholder="e.g. Truffle Steak Pizza"></div>
-            <div class="field"><label>Description</label>
-            <input type="text" id="sp-desc" placeholder="e.g. Today only, EC$5 off"></div>
-            <div class="form-2" style="margin-bottom:1rem">
-              <div class="field tight"><label>Special Price (EC$)</label>
-              <input type="number" id="sp-price" placeholder="45"></div>
-              <div class="field tight"><label>Original Price (EC$)</label>
-              <input type="number" id="sp-orig" placeholder="60"></div>
-            </div>
-            <div class="field"><label>Category</label>
-            <select id="sp-cat"><option>Pizza</option><option>Food</option><option>Other</option></select></div>
-            <button class="btn btn-fill" data-action="add-special">Add Special</button>
-            <div id="admin-specials-list" style="margin-top:1.5rem"></div>
-          </div>
-
-          <!-- SALES -->
-          <div class="ap" id="ap-sales">
-            <h3>Sales Report</h3>
-            <p class="sub">Live data — updates with every order</p>
-            <div class="stats-row" id="stats-row"></div>
-            <div class="report-block"><h4>Top Selling Items</h4><div id="top-chart"></div></div>
-            <div class="report-block"><h4>Recent Orders</h4>
-              <div style="overflow-x:auto"><table class="ord-tbl"><thead><tr><th>Order #</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
-              <tbody id="ord-tbody"></tbody></table></div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <a class="wa-float" id="wa-float" href="#" target="_blank" rel="noopener" title="Message us on WhatsApp">

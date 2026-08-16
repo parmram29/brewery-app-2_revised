@@ -1,18 +1,17 @@
 import { money, escapeHtml } from '../services/format.js';
 import { waLink } from '../services/whatsapp.js';
 import { Cart } from '../services/cart.js';
+import { makeOrderRef } from '../services/order-ref.js';
+import { SHEET_WEBHOOK_URL } from '../config.js';
 
 /**
  * Menu browsing (Pizza / Food tabs, subcategory dropdowns) + cart +
- * checkout (hosted gateway page for card, or cash on pickup).
- *
- * Security note: the cart is UI state only. The server (routes/orders.js)
- * re-resolves every item's price and name from the database when the order
- * is created — nothing priced here is ever trusted directly.
+ * checkout. No backend involved: placing an order builds a WhatsApp
+ * message from the cart and (optionally) logs the order to a Google
+ * Sheet — cash on pickup is the only payment method, confirmed in person.
  */
 export class OrderPage {
-  constructor({ api, menuStore, cart, toast }) {
-    this.api = api;
+  constructor({ menuStore, cart, toast }) {
     this.menuStore = menuStore;
     this.cart = cart;
     this.toast = toast;
@@ -22,7 +21,6 @@ export class OrderPage {
     this.subcategory = null;          // active chip filter, or null for "All"
     this.expandedSubcats = new Set(); // open dropdowns when viewing "All"
     this.sizeChoice = {};             // menu_item_id -> 'M' | 'L'
-    this.payMethod = 'card';
     this.noteEditorKey = null;        // cart line key currently showing its textarea
 
     this.root.addEventListener('click', (e) => this.handleClick(e));
@@ -36,7 +34,7 @@ export class OrderPage {
   handleClick(e) {
     const t = e.target.closest('[data-action]');
     if (!t) return;
-    const { action, id, size, sub, key, delta, method } = t.dataset;
+    const { action, id, size, sub, key, delta } = t.dataset;
     switch (action) {
       case 'retry-menu':     this.retryMenu(); break;
       case 'set-cat':        this.setCategory(t.dataset.cat); break;
@@ -47,7 +45,6 @@ export class OrderPage {
       case 'change-qty':     this.changeQty(key, parseInt(delta)); break;
       case 'remove-line':    this.cart.remove(key); this.renderContent(); break;
       case 'toggle-note':    this.toggleNoteEditor(key); break;
-      case 'set-pay-method': this.setPayMethod(method); break;
       case 'place-order':    this.placeOrder(); break;
       case 'new-order':      this.renderContent(); break;
     }
@@ -108,8 +105,6 @@ export class OrderPage {
       if (ta) { ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; }
     }
   }
-
-  setPayMethod(m) { this.payMethod = m; this.renderContent(); }
 
   // ── Rendering ─────────────────────────────────────────────────
   renderContent() {
@@ -182,11 +177,6 @@ export class OrderPage {
 
   renderCartPanel() {
     const { cart } = this;
-    // With no card gateway live there is exactly one way to pay, so the
-    // selection is forced rather than left on its 'card' default. Without
-    // this the hidden tile could still submit payment_method:'card' and the
-    // order would sit unpaid waiting for a checkout that can never start.
-    if (!this.menuStore.cardPaymentsEnabled) this.payMethod = 'cash';
     return `
     <div class="cart-panel">
       <h3>Your Order</h3>
@@ -214,22 +204,13 @@ export class OrderPage {
       <div class="field"><label>Your Name</label><input id="ord-name" placeholder="First &amp; last name"></div>
       <div class="field"><label>Phone</label><input id="ord-phone" type="tel" placeholder="+1 (473) …"></div>
       <div class="field"><label>Notes (optional)</label><textarea id="ord-notes" placeholder="Allergies, extra sauce, pickup time…"></textarea></div>
-      <label style="display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:.35rem;font-weight:600">Payment</label>
-      ${this.menuStore.cardPaymentsEnabled ? `
-      <div class="pay-method-row">
-        <button type="button" class="pm-btn${this.payMethod === 'card' ? ' on' : ''}" data-action="set-pay-method" data-method="card" aria-pressed="${this.payMethod === 'card'}"><span class="pm-icon">💳</span>Pay by Card</button>
-        <button type="button" class="pm-btn${this.payMethod === 'cash' ? ' on' : ''}" data-action="set-pay-method" data-method="cash" aria-pressed="${this.payMethod === 'cash'}"><span class="pm-icon">💵</span>Pay by Cash</button>
-      </div>` : `
-      <!-- No card gateway is live, so the card tile is hidden rather than shown
-           and then explained away. It returns automatically the moment a
-           provider is configured — nothing here needs editing. -->
       <div class="pay-single">
         <span class="pm-icon">💵</span>
         <div>
           <strong>Pay with cash on pickup</strong>
-          <div class="pay-single-sub">Have ${money(cart.subtotal)} ready when you collect. We'll confirm your order by WhatsApp.</div>
+          <div class="pay-single-sub">Have ${money(cart.subtotal)} ready when you collect. Placing your order opens WhatsApp so we can confirm it.</div>
         </div>
-      </div>`}
+      </div>
       <button class="btn btn-fill btn-block" id="place-order-btn" data-action="place-order">Place Order — ${money(cart.subtotal)}</button>
       `}
     </div>`;
@@ -243,41 +224,48 @@ export class OrderPage {
     if (this.cart.isEmpty) { this.toast.show('Your cart is empty', 'err'); return; }
     if (!name) { this.toast.show('Please enter your name', 'err'); return; }
     if (!phone) { this.toast.show('Please enter a phone number', 'err'); return; }
-    if (this.payMethod === 'card' && !this.menuStore.cardPaymentsEnabled) {
-      this.toast.show('Card payments are not set up yet — please choose cash', 'err'); return;
-    }
 
-    const btn = document.getElementById('place-order-btn');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Placing order…';
+    const order = {
+      order_ref: makeOrderRef(),
+      customer_name: name,
+      phone,
+      notes,
+      items: this.cart.lines.map(l => ({
+        item_name: l.item_name, size: l.size, unit_price: l.unit_price,
+        quantity: l.quantity, special_instructions: l.special_instructions,
+      })),
+      total_ec: this.cart.subtotal,
+      created_at: new Date().toISOString(),
+    };
 
-    const res = await this.api.post('/api/orders', {
-      customer_name: name, phone, notes, items: this.cart.toOrderItems(), payment_method: this.payMethod,
-    });
-    if (!res.ok) { this.toast.show(res.error, 'err'); btn.disabled = false; btn.textContent = 'Place Order'; return; }
+    // Best-effort order log — never blocks checkout. A customer's order must
+    // never fail just because the spreadsheet couldn't be reached.
+    this.logOrderToSheet(order);
 
-    const order = res.order;
-    if (this.payMethod === 'cash') {
-      this.cart.clear();
-      this.showOrderSuccess(order, 'cash');
-      return;
-    }
-
-    const sessionRes = await this.api.post('/api/payments/checkout-session', { order_ref: order.order_ref });
-    if (!sessionRes.ok) { this.toast.show(sessionRes.error, 'err'); btn.disabled = false; btn.textContent = 'Place Order'; return; }
     this.cart.clear();
-    window.location.href = sessionRes.url;
+    this.showOrderSuccess(order);
   }
 
-  showOrderSuccess(order, method) {
+  logOrderToSheet(order) {
+    if (!SHEET_WEBHOOK_URL) return;
+    // mode: 'no-cors' + a plain-text content type avoids a CORS preflight
+    // that Google Apps Script's default web app doesn't handle — the
+    // response is opaque either way, which is fine, nothing here reads it.
+    fetch(SHEET_WEBHOOK_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(order),
+    }).catch(() => {});
+  }
+
+  showOrderSuccess(order) {
     this.root.innerHTML = `
       <div class="order-success">
         <h2>Order Received! 🎉</h2>
         <div class="order-ref">${escapeHtml(order.order_ref)}</div>
-        <p>${method === 'cash'
-          ? `Thanks${order.customer_name ? ', ' + escapeHtml(order.customer_name) : ''}! Have <strong>${money(order.total_ec)}</strong> ready when you collect — we'll confirm your payment at pickup.`
-          : `Thanks! Your payment of ${money(order.total_ec)} is confirmed.`}</p>
+        <p>Thanks${order.customer_name ? ', ' + escapeHtml(order.customer_name) : ''}! Have <strong>${money(order.total_ec)}</strong> ready when you collect — tap below to send us your order on WhatsApp so we can confirm it.</p>
         <p style="font-size:.85rem">Keep this reference handy — it's how we find your order.</p>
-        <p>We'll message you on WhatsApp if we need anything — feel free to reach out too.</p>
         <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:1rem">
           <a class="btn btn-olive" href="${waLink(this.menuStore.whatsapp, this.orderWhatsAppMessage(order))}" target="_blank" rel="noopener">Message Us on WhatsApp</a>
           <button class="btn btn-outline" data-action="new-order">Start a New Order</button>
@@ -286,35 +274,11 @@ export class OrderPage {
   }
 
   // Packs the order reference, items and total into the WhatsApp message so
-  // staff have everything they need at a glance — no need to look the order
-  // up first.
+  // whoever reads it has everything they need at a glance.
   orderWhatsAppMessage(order) {
     const items = (order.items || [])
       .map(i => `${i.quantity}x ${i.item_name}${i.size ? ' (' + i.size + ')' : ''}`)
       .join(', ');
     return `Hi! Just placed order ${order.order_ref} — ${items} — Total: ${money(order.total_ec)}`;
-  }
-
-  /**
-   * Handles the redirect back from the gateway. Success/cancel state is
-   * carried in the URL (?paid=1&ref=... / ?paycancelled=1&ref=...) — the
-   * actual payment confirmation already happened server-side via the
-   * webhook, this just reflects that back to the customer.
-   */
-  async handlePaymentReturn(router) {
-    const params = new URLSearchParams(window.location.search);
-    const ref = params.get('ref');
-    if (params.get('paid') && ref) {
-      const res = await this.api.get('/api/orders/track/' + encodeURIComponent(ref));
-      router.goTo('pay', { section: 'order' });
-      if (res.ok) {
-        setTimeout(() => this.showOrderSuccess(res.order, 'card'), 50);
-      }
-      this.toast.show('Payment confirmed — thank you!', 'ok');
-      window.history.replaceState({}, '', window.location.pathname);
-    } else if (params.get('paycancelled') && ref) {
-      this.toast.show(`Payment cancelled. Your order ${ref} is saved — try again or message us to pay by cash.`, 'err');
-      window.history.replaceState({}, '', window.location.pathname);
-    }
   }
 }

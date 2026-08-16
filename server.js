@@ -3,32 +3,17 @@ const express = require('express');
 const helmet  = require('helmet');
 const cors    = require('cors');
 const path    = require('path');
-const { assertAdminPinConfigured } = require('./lib/auth');
 const { getProvider } = require('./lib/payments');
 const { log } = require('./lib/log');
 
 const app = express();
 
-// Refuse to run with an unset or placeholder ADMIN_PIN rather than run with a
-// dashboard "protected" by a value published in .env.example.
-//
-// On a normal long-lived process (local dev, a VPS) process.exit() is the
-// right call — it fails loudly the moment someone starts the server. On a
-// serverless platform (Vercel) this file is `require()`d fresh per request
-// instead of run once; calling process.exit() there kills the entire
-// function runtime and turns a config mistake into an opaque
-// FUNCTION_INVOCATION_FAILED crash with no useful message. So on serverless,
-// refuse every request with a clear error instead of exiting the process.
-const adminPinConfigured = assertAdminPinConfigured();
-if (!adminPinConfigured) {
-  if (require.main === module) {
-    process.exit(1);
-  }
-  app.use((req, res) => res.status(500).json({
-    ok: false,
-    error: 'Server misconfigured: ADMIN_PIN is not set, or is too weak. Set a real ADMIN_PIN (8+ characters) in your deployment’s environment variables.',
-  }));
-}
+// Note: the ADMIN_PIN boot gate that used to live here is gone along with
+// the Staff dashboard (see public/js/pages — admin-page.js was deleted).
+// The remaining routes/auth.js, lib/auth.js and staff-only endpoints below
+// are unreachable dead code now that nothing in the frontend calls them —
+// left in place for this step, slated for full removal once the backend
+// itself goes away.
 
 // Sets standard defensive headers (X-Content-Type-Options, X-Frame-Options,
 // Referrer-Policy, HSTS, etc).

@@ -24,7 +24,6 @@ export class AdminPage {
 
     this.root.addEventListener('click', (e) => this.handleClick(e));
     this.root.addEventListener('keydown', (e) => this.handleKeydown(e));
-    this.root.addEventListener('change', (e) => this.handleChange(e));
 
     // If a session expires mid-shift, every later call 401s. Drop straight back
     // to the PIN screen instead of leaving a dashboard that silently fails.

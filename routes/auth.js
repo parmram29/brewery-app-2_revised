@@ -11,7 +11,7 @@ const {
 // Rate limited because a short PIN is otherwise brute-forceable in seconds:
 // 10,000 combinations for 4 digits is minutes of scripted requests without
 // a limit. 8 attempts per 15 minutes per IP makes that impractical.
-router.post('/login', rateLimit('staff-login', 8, 15 * 60 * 1000), (req, res) => {
+router.post('/login', rateLimit('staff-login', 8, 15 * 60 * 1000), async (req, res) => {
   const { pin } = req.body || {};
   if (!pin) return res.status(400).json({ ok: false, error: 'PIN required' });
 
@@ -22,23 +22,23 @@ router.post('/login', rateLimit('staff-login', 8, 15 * 60 * 1000), (req, res) =>
     return res.status(401).json({ ok: false, error: 'Incorrect PIN' });
   }
 
-  const token = createSession();
+  const token = await createSession();
   setSessionCookie(res, token);
   securityEvent('auth_success', { client: clientKey(req) });
   res.json({ ok: true });
 });
 
 // POST /api/auth/logout — destroy the session server-side, not just client-side.
-router.post('/logout', (req, res) => {
-  destroySession(readCookie(req, COOKIE_NAME));
+router.post('/logout', async (req, res) => {
+  await destroySession(readCookie(req, COOKIE_NAME));
   clearSessionCookie(res);
   res.json({ ok: true });
 });
 
 // GET /api/auth/session — lets the dashboard restore itself after a refresh
 // without re-prompting, and detect an expired session.
-router.get('/session', (req, res) => {
-  res.json({ ok: true, authenticated: isValidSession(readCookie(req, COOKIE_NAME)) });
+router.get('/session', async (req, res) => {
+  res.json({ ok: true, authenticated: await isValidSession(readCookie(req, COOKIE_NAME)) });
 });
 
 module.exports = router;

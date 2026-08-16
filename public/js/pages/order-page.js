@@ -279,10 +279,20 @@ export class OrderPage {
         <p style="font-size:.85rem">Keep this reference handy — it's how we find your order.</p>
         <p>We'll message you on WhatsApp if we need anything — feel free to reach out too.</p>
         <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:1rem">
-          <a class="btn btn-olive" href="${waLink(this.menuStore.whatsapp, 'Hi! Just placed order ' + order.order_ref)}" target="_blank" rel="noopener">Message Us on WhatsApp</a>
+          <a class="btn btn-olive" href="${waLink(this.menuStore.whatsapp, this.orderWhatsAppMessage(order))}" target="_blank" rel="noopener">Message Us on WhatsApp</a>
           <button class="btn btn-outline" data-action="new-order">Start a New Order</button>
         </div>
       </div>`;
+  }
+
+  // Packs the order reference, items and total into the WhatsApp message so
+  // staff have everything they need at a glance — no need to look the order
+  // up first.
+  orderWhatsAppMessage(order) {
+    const items = (order.items || [])
+      .map(i => `${i.quantity}x ${i.item_name}${i.size ? ' (' + i.size + ')' : ''}`)
+      .join(', ');
+    return `Hi! Just placed order ${order.order_ref} — ${items} — Total: ${money(order.total_ec)}`;
   }
 
   /**
@@ -298,7 +308,7 @@ export class OrderPage {
       const res = await this.api.get('/api/orders/track/' + encodeURIComponent(ref));
       router.goTo('pay', { section: 'order' });
       if (res.ok) {
-        setTimeout(() => this.showOrderSuccess({ order_ref: res.order.order_ref, customer_name: '', total_ec: res.order.total_ec }, 'card'), 50);
+        setTimeout(() => this.showOrderSuccess(res.order, 'card'), 50);
       }
       this.toast.show('Payment confirmed — thank you!', 'ok');
       window.history.replaceState({}, '', window.location.pathname);

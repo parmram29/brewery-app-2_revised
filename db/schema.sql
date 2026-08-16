@@ -134,6 +134,17 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- ── Staff sessions ────────────────────────────────────────────
+-- Shared across every instance of the app, not just the one that handled the
+-- login — required on serverless (Vercel), where each request can be routed
+-- to a different, short-lived process. An in-memory session store there
+-- means "signed in" only on whichever instance happens to hold that token,
+-- so requests intermittently 401 with no real expiry having occurred.
+CREATE TABLE IF NOT EXISTS staff_sessions (
+  token       VARCHAR(64)  PRIMARY KEY,
+  expires_at  BIGINT       NOT NULL
+);
+
 -- Default settings
 INSERT IGNORE INTO settings (`key`, `value`) VALUES
   ('max_covers_per_slot', '20'),

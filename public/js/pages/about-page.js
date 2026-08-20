@@ -1,9 +1,10 @@
 import { waLink } from '../services/whatsapp.js';
-import { footerHtml } from '../ui/footer.js';
+import { footerHtml, bindFooterNav } from '../ui/footer.js';
 
 export class AboutPage {
-  constructor({ menuStore }) {
+  constructor({ menuStore, router }) {
     this.menuStore = menuStore;
+    bindFooterNav('about-footer', router);
   }
 
   onEnter() {

@@ -27,9 +27,9 @@ class App {
     this.router = new Router(['home', 'about', 'pay']);
 
     this.homePage = new HomePage({ menuStore: this.menuStore, router: this.router });
-    this.aboutPage = new AboutPage({ menuStore: this.menuStore });
+    this.aboutPage = new AboutPage({ menuStore: this.menuStore, router: this.router });
     this.orderPage = new OrderPage({ menuStore: this.menuStore, cart: this.cart, toast: this.toast });
-    this.payPage = new PayPage({ orderPage: this.orderPage, menuStore: this.menuStore });
+    this.payPage = new PayPage({ orderPage: this.orderPage, menuStore: this.menuStore, router: this.router });
 
     this.router.onEnter('home', () => this.homePage.onEnter());
     this.router.onEnter('about', () => this.aboutPage.onEnter());

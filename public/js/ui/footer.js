@@ -1,5 +1,23 @@
 import { waLink, WA_ICON_SVG } from '../services/whatsapp.js';
 
+/**
+ * Wires the footer's "Order Online" / "About & Contact" links, which use
+ * data-action="go-to" like every other nav link in the app rather than a
+ * plain <a href>, so page switching stays consistent everywhere.
+ *
+ * Call once (constructor time is fine) on the persistent container the
+ * footer gets rendered into — event delegation means it keeps working even
+ * though the footer's actual content is replaced later via innerHTML.
+ */
+export function bindFooterNav(containerId, router) {
+  const el = document.getElementById(containerId);
+  el.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-action]');
+    if (!t) return;
+    if (t.dataset.action === 'go-to') router.goTo(t.dataset.page);
+  });
+}
+
 /** Same footer markup rendered into #home-footer / #about-footer / #pay-footer. */
 export function footerHtml(whatsapp) {
   return `

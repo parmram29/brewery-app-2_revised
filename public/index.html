@@ -3,1026 +3,207 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Brewery — West Indies Beer Company</title>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
-<style>
-:root{--brown-dark:#2A1F14;--brown:#3D2B1A;--brown-mid:#5C3D22;--amber:#C47A2A;--amber-light:#E09840;--cream:#F2E8D5;--cream-dark:#D9C9A8;--text:#F0E6D0;--text-muted:#A8906E;--text-dim:#6B5540;--border:rgba(196,122,42,0.25);--border-soft:rgba(255,255,255,0.08);--green:#5A8A3C;}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--brown-dark);color:var(--text);font-family:'Source Sans 3',sans-serif;font-weight:300;line-height:1.6;}
-h1,h2,h3,h4{font-family:'Libre Baskerville',serif;font-weight:400;}
-nav{background:var(--brown);border-bottom:2px solid var(--amber);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:68px;position:sticky;top:0;z-index:200;}
-.logo img{height:52px;display:block;}
-.nav-links{display:flex;gap:.25rem;}
-.nav-btn{background:none;border:none;color:var(--text-muted);font-family:'Source Sans 3',sans-serif;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;padding:.5rem .85rem;cursor:pointer;border-radius:3px;transition:all .2s;}
-.nav-btn:hover,.nav-btn.active{color:var(--amber-light);background:rgba(196,122,42,.12);}
-.nav-btn.res-nav{color:var(--amber);border:1px solid var(--border);}
-.nav-btn.res-nav:hover,.nav-btn.res-nav.active{background:rgba(196,122,42,.18);}
-.cart-pill{background:var(--amber);color:var(--brown-dark);font-size:.78rem;font-weight:600;padding:.4rem 1rem;border-radius:3px;border:none;cursor:pointer;font-family:'Source Sans 3',sans-serif;}
-.cart-pill:hover{background:var(--amber-light);}
-.staff-link{background:none;border:1px solid var(--border);color:var(--text-dim);font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;padding:.35rem .7rem;border-radius:3px;cursor:pointer;font-family:'Source Sans 3',sans-serif;}
-.page{display:none;min-height:calc(100vh - 68px);}
-.page.active{display:block;}
-
-/* HERO */
-.hero{position:relative;height:520px;overflow:hidden;}
-.slider-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.2s;}
-.slider-img.show{opacity:1;}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(30,18,8,.45),rgba(30,18,8,.75));}
-.hero-content{position:absolute;bottom:0;left:0;right:0;padding:2.5rem 2rem 3rem;text-align:center;}
-.hero-logo{width:160px;margin:0 auto 1rem;}
-.hero-content h1{font-size:clamp(1.8rem,5vw,3rem);color:var(--cream);margin-bottom:.5rem;}
-.hero-content p{color:var(--cream-dark);font-size:1rem;max-width:560px;margin:0 auto 1.5rem;}
-.hero-btns{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;}
-.btn-amber{background:var(--amber);color:var(--brown-dark);font-family:'Source Sans 3',sans-serif;font-size:.82rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:.7rem 1.6rem;border:none;border-radius:3px;cursor:pointer;}
-.btn-amber:hover{background:var(--amber-light);}
-.btn-ghost{background:none;color:var(--cream);font-family:'Source Sans 3',sans-serif;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;padding:.7rem 1.6rem;border:1px solid rgba(242,232,213,.4);border-radius:3px;cursor:pointer;}
-
-/* BOTTOMLESS HERO BANNER */
-.brunch-banner{background:linear-gradient(135deg,var(--brown-mid),var(--brown));border-top:2px solid var(--amber);border-bottom:2px solid var(--amber);padding:2.5rem 2rem;text-align:center;}
-.brunch-banner .eyebrow{font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--amber);margin-bottom:.6rem;}
-.brunch-banner h2{font-size:clamp(1.8rem,4vw,3rem);color:var(--cream);margin-bottom:.75rem;}
-.brunch-banner p{color:var(--text-muted);max-width:560px;margin:0 auto 1.5rem;font-size:.95rem;line-height:1.7;}
-.brunch-pills{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;}
-.pill{display:inline-block;background:rgba(196,122,42,.15);border:1px solid var(--border);color:var(--cream-dark);font-size:.78rem;letter-spacing:.08em;padding:.4rem 1rem;border-radius:20px;}
-.pill.gold{background:rgba(196,122,42,.25);color:var(--amber-light);}
-
-/* INFO STRIP */
-.info-strip{background:var(--brown-mid);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;text-align:center;}
-.info-item strong{color:var(--amber-light);display:block;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.15rem;font-weight:600;}
-.info-item span{color:var(--cream-dark);font-size:.82rem;}
-
-/* COMMON */
-.wrap{max-width:1080px;margin:0 auto;padding:0 1.5rem;}
-.sec-head{text-align:center;padding:3rem 0 2rem;}
-.sec-head h2{font-size:clamp(1.6rem,4vw,2.5rem);color:var(--cream);margin-bottom:.4rem;}
-.sec-head .rule{width:50px;height:2px;background:var(--amber);margin:.6rem auto .8rem;}
-.sec-head p{color:var(--text-muted);font-size:.9rem;}
-
-/* BEERS */
-.beers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:rgba(255,255,255,.05);margin-bottom:3rem;}
-.beer-card{background:var(--brown);padding:1.4rem 1.5rem;transition:background .15s;}
-.beer-card:hover{background:var(--brown-mid);}
-.beer-abv{display:inline-block;background:rgba(196,122,42,.18);color:var(--amber-light);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:.18rem .5rem;border-radius:2px;margin-bottom:.6rem;font-weight:600;}
-.beer-type{display:inline-block;background:rgba(90,138,60,.15);color:#8CC46A;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding:.18rem .5rem;border-radius:2px;margin-bottom:.6rem;margin-left:.3rem;}
-.beer-name{font-family:'Libre Baskerville',serif;font-size:1.15rem;color:var(--cream);margin-bottom:.3rem;}
-.beer-desc{font-size:.82rem;color:var(--text-muted);line-height:1.5;margin-bottom:1rem;}
-.beer-footer{display:flex;align-items:center;justify-content:space-between;}
-.beer-price{font-family:'Libre Baskerville',serif;color:var(--amber);font-size:1rem;}
-.cat-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.5rem;}
-.cat-tab{background:none;border:1px solid var(--border-soft);color:var(--text-muted);font-family:'Source Sans 3',sans-serif;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;padding:.4rem 1rem;border-radius:2px;cursor:pointer;transition:all .15s;}
-.cat-tab:hover,.cat-tab.on{border-color:var(--amber);color:var(--amber);}
-
-/* SPECIALS */
-.specials-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-bottom:3rem;}
-.special-card{background:var(--brown);border:1px solid var(--border);border-radius:3px;padding:1.5rem;position:relative;}
-.special-card::before{content:'';position:absolute;top:0;left:1.5rem;right:1.5rem;height:2px;background:var(--amber);}
-.sc-label{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem;}
-.sc-name{font-family:'Libre Baskerville',serif;font-size:1.3rem;color:var(--cream);margin-bottom:.3rem;}
-.sc-desc{font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.5;}
-.sc-prices{display:flex;align-items:baseline;gap:.6rem;}
-.sc-price{font-family:'Libre Baskerville',serif;color:var(--amber-light);font-size:1.15rem;}
-.sc-was{font-size:.8rem;color:var(--text-dim);text-decoration:line-through;}
-
-/* EVENTS */
-.events-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1px;background:rgba(255,255,255,.05);margin-bottom:3rem;}
-.event-day{background:var(--brown);padding:1.25rem 1.5rem;}
-.ev-day{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:.4rem;font-weight:600;}
-.ev-name{font-family:'Libre Baskerville',serif;font-size:1.05rem;color:var(--cream);margin-bottom:.25rem;}
-.ev-note{font-size:.78rem;color:var(--text-muted);}
-
-/* FOOD */
-.food-section{margin-bottom:2rem;}
-.food-section h3{font-size:1.1rem;color:var(--amber-light);letter-spacing:.05em;margin-bottom:1rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);}
-.food-table{width:100%;border-collapse:collapse;}
-.food-table tr{border-bottom:1px solid rgba(255,255,255,.04);}
-.food-table tr:hover td{background:rgba(255,255,255,.03);}
-.food-table td{padding:.65rem .5rem;font-size:.88rem;}
-.food-table td:last-child{text-align:right;color:var(--amber);font-family:'Libre Baskerville',serif;white-space:nowrap;}
-
-/* ═══════════════════════════════════════════
-   RESERVATION PAGE
-═══════════════════════════════════════════ */
-.res-layout{display:grid;grid-template-columns:1fr 380px;gap:2rem;padding-bottom:4rem;align-items:start;}
-
-/* Food picker cards */
-.food-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;margin-bottom:1.5rem;}
-.food-opt{background:var(--brown);border:2px solid var(--border-soft);border-radius:4px;padding:1.1rem 1.25rem;cursor:pointer;transition:all .2s;position:relative;}
-.food-opt:hover{border-color:var(--amber);background:var(--brown-mid);}
-.food-opt.selected{border-color:var(--amber);background:var(--brown-mid);}
-.food-opt.selected::after{content:'✓';position:absolute;top:.6rem;right:.75rem;color:var(--amber);font-size:.9rem;font-weight:600;}
-.food-opt.star-opt{border-color:rgba(196,122,42,.4);}
-.food-opt-label{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:.35rem;}
-.food-opt-name{font-family:'Libre Baskerville',serif;font-size:1rem;color:var(--cream);margin-bottom:.25rem;}
-.food-opt-desc{font-size:.75rem;color:var(--text-muted);line-height:1.4;}
-.food-opt-price{font-family:'Libre Baskerville',serif;color:var(--amber-light);font-size:.95rem;margin-top:.5rem;}
-
-/* Time slot picker */
-.slot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:1.5rem;}
-.slot-btn{background:var(--brown);border:1px solid var(--border-soft);color:var(--text-muted);font-family:'Source Sans 3',sans-serif;font-size:.78rem;padding:.5rem .25rem;text-align:center;border-radius:3px;cursor:pointer;transition:all .15s;line-height:1.3;}
-.slot-btn:hover:not(.full){border-color:var(--amber);color:var(--amber);}
-.slot-btn.picked{border-color:var(--amber);background:rgba(196,122,42,.18);color:var(--amber-light);}
-.slot-btn.full{opacity:.35;cursor:not-allowed;text-decoration:line-through;}
-.slot-time{font-weight:600;display:block;}
-.slot-left{font-size:.65rem;color:var(--green);display:block;margin-top:.1rem;}
-.slot-left.low{color:#E09840;}
-
-/* Party size stepper */
-.party-stepper{display:flex;align-items:center;gap:1rem;background:var(--brown);border:1px solid var(--border-soft);padding:.75rem 1rem;border-radius:3px;width:fit-content;}
-.ps-btn{width:32px;height:32px;background:var(--brown-mid);border:1px solid var(--border);color:var(--text-muted);font-size:1.2rem;border-radius:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.ps-btn:hover{border-color:var(--amber);color:var(--amber);}
-.ps-num{font-family:'Libre Baskerville',serif;font-size:1.4rem;color:var(--cream);min-width:30px;text-align:center;}
-.ps-label{font-size:.78rem;color:var(--text-muted);}
-
-/* Summary card */
-.res-summary{background:var(--brown);border:1px solid var(--border);padding:1.5rem;position:sticky;top:78px;border-radius:3px;}
-.res-summary h3{font-size:1.3rem;margin-bottom:.25rem;}
-.res-summary .sub{font-size:.75rem;color:var(--text-muted);margin-bottom:1.5rem;}
-.sum-row{display:flex;justify-content:space-between;align-items:flex-start;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.85rem;}
-.sum-row:last-of-type{border-bottom:none;}
-.sum-lbl{color:var(--text-muted);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;}
-.sum-val{color:var(--text);text-align:right;max-width:60%;}
-.res-field{margin-bottom:1rem;}
-.res-field label{display:block;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.35rem;}
-.res-field input,.res-field textarea{width:100%;background:var(--brown-mid);border:1px solid var(--border-soft);color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:.9rem;padding:.6rem .75rem;border-radius:2px;outline:none;transition:border-color .2s;}
-.res-field input:focus,.res-field textarea:focus{border-color:var(--amber);}
-.res-field textarea{resize:none;height:56px;}
-.book-btn{width:100%;background:var(--amber);color:var(--brown-dark);font-family:'Source Sans 3',sans-serif;font-size:.82rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:.9rem;border:none;border-radius:3px;cursor:pointer;margin-top:.75rem;}
-.book-btn:hover{background:var(--amber-light);}
-.book-btn:disabled{background:var(--brown-mid);color:var(--text-dim);cursor:not-allowed;}
-
-/* Date tabs */
-.date-tabs{display:flex;gap:.5rem;margin-bottom:1.75rem;flex-wrap:wrap;}
-.date-tab{background:var(--brown);border:1px solid var(--border-soft);color:var(--text-muted);font-family:'Source Sans 3',sans-serif;font-size:.78rem;padding:.55rem 1.1rem;border-radius:3px;cursor:pointer;transition:all .2s;text-align:center;}
-.date-tab:hover,.date-tab.on{border-color:var(--amber);color:var(--amber-light);background:rgba(196,122,42,.1);}
-.date-tab .dt-day{font-weight:600;display:block;font-size:.9rem;color:var(--cream);}
-.date-tab .dt-label{font-size:.68rem;letter-spacing:.08em;}
-
-/* Step labels */
-.step-label{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;}
-.step-label::after{content:'';flex:1;height:1px;background:var(--border-soft);}
-
-/* SUCCESS */
-.res-success{text-align:center;padding:4rem 2rem;}
-.res-success h2{font-size:2.5rem;margin-bottom:.75rem;}
-.res-success p{color:var(--text-muted);max-width:440px;margin:0 auto 1rem;line-height:1.6;}
-.res-ref{display:inline-block;background:rgba(196,122,42,.15);border:1px solid var(--border);color:var(--amber-light);font-family:'Libre Baskerville',serif;font-size:1.3rem;padding:.6rem 1.5rem;border-radius:3px;margin:1rem 0 1.5rem;}
-
-/* ADMIN */
-.login-box{max-width:360px;margin:5rem auto;background:var(--brown);border:1px solid var(--border);padding:2.5rem;text-align:center;}
-.login-box h2{font-size:1.8rem;margin-bottom:.4rem;}
-.login-box p{color:var(--text-muted);font-size:.82rem;margin-bottom:1.75rem;}
-.admin-layout{display:grid;grid-template-columns:200px 1fr;gap:1.5rem;padding:1.5rem 0 3rem;}
-.admin-sidebar{background:var(--brown);border:1px solid var(--border-soft);padding:1rem;}
-.asb{display:block;width:100%;text-align:left;background:none;border:none;color:var(--text-muted);font-family:'Source Sans 3',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;padding:.55rem .7rem;border-radius:2px;cursor:pointer;margin-bottom:.25rem;}
-.asb:hover,.asb.on{color:var(--amber);background:rgba(196,122,42,.1);}
-.ap{display:none;}
-.ap.on{display:block;}
-.ap h3{font-size:1.6rem;margin-bottom:.3rem;}
-.ap .sub{font-size:.78rem;color:var(--text-muted);letter-spacing:.08em;margin-bottom:1.75rem;padding-bottom:1rem;border-bottom:1px solid var(--border-soft);}
-.form-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
-.save-btn{background:var(--amber);color:var(--brown-dark);font-family:'Source Sans 3',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1.75rem;border:none;border-radius:3px;cursor:pointer;}
-.save-btn:hover{background:var(--amber-light);}
-.sp-row{display:flex;align-items:center;justify-content:space-between;background:var(--brown-mid);border-radius:2px;padding:.9rem 1.1rem;margin-bottom:.6rem;}
-.sp-row-name{font-family:'Libre Baskerville',serif;font-size:1rem;color:var(--cream);}
-.sp-row-meta{font-size:.74rem;color:var(--text-muted);margin-top:.1rem;}
-.del-btn{background:rgba(180,60,40,.15);border:1px solid rgba(180,60,40,.3);color:#D08070;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .65rem;border-radius:2px;cursor:pointer;font-family:'Source Sans 3',sans-serif;}
-.del-btn:hover{background:rgba(180,60,40,.28);}
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:2rem;}
-.stat{background:var(--brown-mid);padding:1.25rem;border-radius:2px;}
-.stat-lbl{font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.4rem;}
-.stat-val{font-family:'Libre Baskerville',serif;font-size:1.9rem;color:var(--amber-light);}
-.stat-note{font-size:.72rem;color:var(--text-dim);margin-top:.15rem;}
-.report-block{margin-bottom:2rem;}
-.report-block h4{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.9rem;font-family:'Source Sans 3',sans-serif;}
-.bar-r{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;}
-.b-lbl{font-size:.8rem;color:var(--text-muted);min-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.b-track{flex:1;background:rgba(255,255,255,.06);height:8px;border-radius:4px;overflow:hidden;}
-.b-fill{height:100%;background:var(--amber);border-radius:4px;}
-.b-num{font-size:.78rem;color:var(--amber);min-width:36px;text-align:right;}
-.ord-tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
-.ord-tbl th{text-align:left;font-size:.67rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);font-weight:400;padding:.45rem .75rem;border-bottom:1px solid var(--border-soft);}
-.ord-tbl td{padding:.75rem .75rem;border-bottom:1px solid rgba(255,255,255,.03);}
-.ord-tbl tr:hover td{background:var(--brown-mid);}
-.badge{display:inline-block;font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;padding:.18rem .5rem;border-radius:2px;}
-.b-conf{background:rgba(90,138,60,.18);color:#8CC46A;}
-.b-paid,.b-seated{background:rgba(90,138,60,.18);color:#8CC46A;}
-.b-pend,.b-confirmed{background:rgba(196,122,42,.15);color:var(--amber);}
-.b-canc,.b-cancelled{background:rgba(180,60,40,.15);color:#D08070;}
-.b-noshow,.b-no-show{background:rgba(100,80,60,.2);color:var(--text-muted);}
-.live-card{background:var(--brown-mid);border:1px solid var(--border);border-radius:3px;padding:1.25rem;margin-bottom:.75rem;}
-.live-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;}
-.live-id{font-family:'Libre Baskerville',serif;font-size:1rem;}
-.live-meta{font-size:.75rem;color:var(--text-muted);}
-.live-items{font-size:.82rem;color:var(--text-muted);line-height:1.6;margin-bottom:.6rem;}
-.live-note{font-size:.78rem;color:var(--amber);margin-bottom:.6rem;}
-.status-btns{display:flex;gap:.5rem;flex-wrap:wrap;}
-.st-btn{background:none;border:1px solid var(--border-soft);color:var(--text-muted);font-family:'Source Sans 3',sans-serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .65rem;border-radius:2px;cursor:pointer;}
-.st-btn:hover{border-color:var(--amber);color:var(--amber);}
-.st-btn.paid{background:rgba(90,138,60,.2);border-color:rgba(90,138,60,.4);color:#8CC46A;}
-
-/* Reservation admin cards */
-.res-card{background:var(--brown-mid);border:1px solid var(--border);border-radius:3px;padding:1.25rem;margin-bottom:.75rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
-.res-card-info .res-name{font-family:'Libre Baskerville',serif;font-size:1.05rem;color:var(--cream);margin-bottom:.2rem;}
-.res-card-info .res-detail{font-size:.8rem;color:var(--text-muted);line-height:1.6;}
-.res-card-info .res-food{font-size:.75rem;color:var(--amber);margin-top:.25rem;}
-.res-card-actions{display:flex;flex-direction:column;gap:.4rem;min-width:100px;}
-.capacity-box{background:var(--brown-mid);border:1px solid var(--border);padding:1.25rem;border-radius:3px;margin-bottom:2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
-.capacity-box label{font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);}
-.capacity-box input{background:var(--brown);border:1px solid var(--border-soft);color:var(--text);font-size:1rem;padding:.4rem .6rem;border-radius:2px;width:70px;outline:none;text-align:center;}
-.capacity-box input:focus{border-color:var(--amber);}
-
-/* Contact */
-.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;padding-bottom:3rem;}
-.contact-block{background:var(--brown);border:1px solid var(--border-soft);padding:1.75rem;}
-.contact-block h3{font-size:1.2rem;color:var(--amber-light);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border-soft);}
-.hours-row{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:.85rem;}
-.hours-row:last-child{border-bottom:none;}
-.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:3rem;}
-.photo-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;}
-
-/* TOAST */
-.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--brown-mid);border:1px solid var(--border);color:var(--cream);padding:.85rem 1.4rem;border-radius:3px;font-size:.84rem;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;max-width:320px;}
-.toast.in{transform:translateY(0);opacity:1;}
-.toast.amber{border-color:var(--amber);}
-.toast.err{border-color:#D08070;color:#D08070;}
-.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:.4rem;}
-@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:760px){.res-layout{grid-template-columns:1fr;}.admin-layout{grid-template-columns:1fr;}.stats-row{grid-template-columns:repeat(2,1fr);}.contact-grid{grid-template-columns:1fr;}.photo-grid{grid-template-columns:repeat(2,1fr);}.slot-grid{grid-template-columns:repeat(3,1fr);}.res-summary{position:static;}}
-</style>
+<title>Sweet &amp; Crispy — Grenada</title>
+<meta name="description" content="Sweet & Crispy — wood-fired pizza and island favourites in Grenada. Order online, pay by card or cash.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
 <nav>
-  <div class="logo" onclick="goTo('home')" style="cursor:pointer">
-    <img src="https://westindiesbeer.com/html/images/logo.png" alt="West Indies Beer Company" onerror="this.style.display='none';this.parentNode.innerHTML='<span style=&quot;font-family:Libre Baskerville,serif;color:var(--amber);font-size:1rem;&quot;>The Brewery</span>'">
+  <div class="logo" data-action="go-to" data-page="home">
+    <span class="logo-badge" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="20" height="20">
+        <circle cx="8.5" cy="9.5" r="3.3" fill="#fff"/>
+        <circle cx="15.5" cy="9.5" r="3.3" fill="#fff"/>
+        <circle cx="12" cy="7" r="4.2" fill="#fff"/>
+        <rect x="7" y="12.5" width="10" height="6.5" rx="2" fill="#fff"/>
+        <rect x="7" y="14.7" width="10" height="1.4" style="fill:var(--terracotta)"/>
+      </svg>
+    </span>
+    <span class="logo-word">Sweet <em>&amp;</em> Crispy</span>
   </div>
-  <div class="nav-links">
-    <button class="nav-btn active" onclick="goTo('home')">Home</button>
-    <button class="nav-btn" onclick="goTo('beers')">Beers</button>
-    <button class="nav-btn" onclick="goTo('food')">Food &amp; Bar</button>
-    <button class="nav-btn res-nav" onclick="goTo('reserve')">Reserve a Table</button>
-    <button class="nav-btn" onclick="goTo('contact')">Info</button>
-  </div>
-  <div style="display:flex;gap:.5rem;align-items:center">
-    <button class="staff-link" onclick="goTo('admin')">Staff</button>
+  <button class="hamburger" data-action="toggle-nav" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">☰</button>
+  <div class="nav-links" id="nav-links">
+    <button class="nav-btn active" data-action="go-to" data-page="home">Home</button>
+    <button class="nav-btn" data-action="go-to" data-page="about">About &amp; Contact</button>
+    <button class="nav-btn order-nav" data-action="go-to" data-page="pay">Order Now</button>
   </div>
 </nav>
 
 <!-- ═══════════ HOME ═══════════ -->
 <div id="page-home" class="page active">
   <div class="hero">
-    <img class="slider-img show" id="sl0" src="https://westindiesbeer.com/jsImgSlider/images/image-slider-1.jpg" alt="">
-    <img class="slider-img" id="sl1" src="https://westindiesbeer.com/jsImgSlider/images/image-slider-2.jpg" alt="">
-    <img class="slider-img" id="sl2" src="https://westindiesbeer.com/jsImgSlider/images/image-slider-3.jpg" alt="">
-    <img class="slider-img" id="sl3" src="https://westindiesbeer.com/jsImgSlider/images/image-slider-4.jpg" alt="">
-    <img class="slider-img" id="sl4" src="https://westindiesbeer.com/jsImgSlider/images/image-slider-5.jpg" alt="">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-      <img class="hero-logo" src="https://westindiesbeer.com/html/images/logo.png" alt="West Indies Beer Company" onerror="this.style.display='none'">
-      <h1>The Brewery</h1>
-      <p>Hand-crafted real ales &amp; ciders brewed right here in Grenada. Open every day, 8am till late.</p>
-      <div class="hero-btns">
-        <button class="btn-amber" onclick="goTo('reserve')">Reserve a Table</button>
-        <button class="btn-ghost" onclick="goTo('beers')">See Our Beers</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- BOTTOMLESS MIMOSA STAR FEATURE -->
-  <div class="brunch-banner">
-    <div class="eyebrow">Every Morning · From 8am</div>
-    <h2>Bottomless Mimosa Brunch</h2>
-    <p>Start your morning right. Unlimited mimosas paired with our full brunch menu — the perfect way to celebrate, recover, or just enjoy a lazy morning in Grenada.</p>
-    <div class="brunch-pills">
-      <span class="pill gold">🥂 Bottomless Mimosas</span>
-      <span class="pill">Full Brunch Menu</span>
-      <span class="pill">From 8am Daily</span>
-      <span class="pill">Pay at the Door</span>
-    </div>
-    <button class="btn-amber" onclick="goTo('reserve')">Book Your Table</button>
-  </div>
-
-  <div class="info-strip">
-    <div class="info-item"><strong>Hours</strong><span>Sun–Wed 8am–1am · Thu–Sat 8am–Late</span></div>
-    <div class="info-item"><strong>Location</strong><span>Lance Aux Epines, Grenada</span></div>
-    <div class="info-item"><strong>On Tap</strong><span>16+ craft beers &amp; ciders</span></div>
-    <div class="info-item"><strong>Founded</strong><span>September 2014</span></div>
-  </div>
-
-  <div class="wrap">
-    <div class="sec-head"><h2>Tonight's Specials</h2><div class="rule"></div><p id="home-spec-date"></p></div>
-    <div id="home-specials"></div>
-    <div class="sec-head" style="padding-top:1rem"><h2>What's On This Week</h2><div class="rule"></div></div>
-    <div class="events-grid">
-      <div class="event-day"><div class="ev-day">Monday</div><div class="ev-name">Rock Night &amp; Jam</div></div>
-      <div class="event-day"><div class="ev-day">Tuesday</div><div class="ev-name">Movie Night</div></div>
-      <div class="event-day"><div class="ev-day">Wednesday</div><div class="ev-name">Western Wednesday</div></div>
-      <div class="event-day"><div class="ev-day">Thursday</div><div class="ev-name">Latin Night</div><div class="ev-note">Salsa from 8pm with Ron — free</div></div>
-      <div class="event-day"><div class="ev-day">Friday</div><div class="ev-name">Live DJ</div></div>
-      <div class="event-day"><div class="ev-day">Saturday</div><div class="ev-name">Brews &amp; Bites</div></div>
-      <div class="event-day"><div class="ev-day">Sunday</div><div class="ev-name">Sunday Market</div></div>
-    </div>
-    <div class="sec-head" style="padding-top:0"><h2>At The Brewery</h2><div class="rule"></div></div>
-    <div class="photo-grid">
-      <img src="https://westindiesbeer.com/jsImgSlider/images/image-slider-1.jpg" alt="">
-      <img src="https://westindiesbeer.com/jsImgSlider/images/image-slider-2.jpg" alt="">
-      <img src="https://westindiesbeer.com/jsImgSlider/images/image-slider-3.jpg" alt="">
-      <img src="https://westindiesbeer.com/jsImgSlider/images/image-slider-4.jpg" alt="">
-      <img src="https://westindiesbeer.com/jsImgSlider/images/image-slider-5.jpg" alt="">
-      <img src="https://westindiesbeer.com/jsImgSlider/images/image-slider-7.jpg" alt="">
-    </div>
-  </div>
-  <div style="text-align:center;padding:1rem 0 2.5rem;color:var(--text-dim);font-size:.78rem;">Copyright © West Indies Beer Company. All rights reserved.</div>
-</div>
-
-<!-- ═══════════ BEERS ═══════════ -->
-<div id="page-beers" class="page">
-  <div class="wrap">
-    <div class="sec-head"><h2>Our Beers &amp; Ciders</h2><div class="rule"></div><p>All brewed in Grenada — glass, mason jar, flight, or growler</p></div>
-    <div class="cat-tabs" id="cat-tabs"></div>
-    <div class="beers-grid" id="beers-grid"></div>
-  </div>
-</div>
-
-<!-- ═══════════ FOOD ═══════════ -->
-<div id="page-food" class="page">
-  <div class="wrap">
-    <div class="sec-head"><h2>Food &amp; Bar</h2><div class="rule"></div><p>Pub grub, breakfasts &amp; great coffee from 8am · Prices in EC$</p></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;padding-bottom:3rem;">
-      <div>
-        <div class="food-section"><h3>🥂 Bottomless Mimosa Brunch</h3>
-          <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;">Unlimited mimosas + your choice of brunch plate. Available from 8am daily.</p>
-          <table class="food-table">
-            <tr><td>Classic Bottomless Mimosa Brunch</td><td style="color:var(--amber-light)">Ask at bar</td></tr>
-          </table>
+    <div class="wrap">
+      <!--
+        Brand card: same split-card composition as the KariBites listing —
+        a solid colour panel carrying the wordmark next to a photo panel.
+        Drop a real photo at public/images/hero-pizza.jpg (any size, it's
+        cropped to fit) and it replaces the illustration automatically; if
+        that file doesn't exist yet, the <img> below 404s and its onerror
+        reveals the hand-drawn fallback illustration instead.
+      -->
+      <div class="brand-card">
+        <div class="bc-panel">
+          <svg class="bc-seal" viewBox="0 0 100 100" aria-hidden="true" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <defs>
+              <path id="sealCirc" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0"/>
+            </defs>
+            <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" stroke-dasharray="2 4"/>
+            <circle cx="50" cy="50" r="30" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/>
+            <text font-size="7.2" fill="rgba(255,255,255,.92)" font-family="Inter, sans-serif" font-weight="700" letter-spacing="1.5">
+              <!-- Both href and xlink:href: Safari only honours the plain
+                   href form on <textPath> in recent versions. -->
+              <textPath href="#sealCirc" xlink:href="#sealCirc" startOffset="2%">GRENADA &#8226; FAMILY-RUN &#8226; WOOD-FIRED &#8226;</textPath>
+            </text>
+            <g transform="translate(50,50) scale(1.55) translate(-12,-11)">
+              <circle cx="8.5" cy="9.5" r="3.3" fill="#fff"/>
+              <circle cx="15.5" cy="9.5" r="3.3" fill="#fff"/>
+              <circle cx="12" cy="7" r="4.2" fill="#fff"/>
+              <rect x="7" y="12.5" width="10" height="6.5" rx="2" fill="#fff"/>
+              <rect x="7" y="14.7" width="10" height="1.4" style="fill:var(--gold)"/>
+            </g>
+          </svg>
+          <h1>Sweet<br>&amp; Crispy</h1>
+          <p class="bc-tag">True blue Grenada</p>
         </div>
-        <div class="food-section"><h3>Pub Grub</h3><table class="food-table">
-          <tr><td>Fish Tacos (3)</td><td>EC$22</td></tr><tr><td>Fish Burger</td><td>EC$24</td></tr>
-          <tr><td>Chicken Wings (6)</td><td>EC$20</td></tr><tr><td>Nachos</td><td>EC$18</td></tr>
-          <tr><td>Cheese Board</td><td>EC$22</td></tr><tr><td>Garlic Bread</td><td>EC$10</td></tr>
-        </table></div>
-        <div class="food-section"><h3>Sides</h3><table class="food-table">
-          <tr><td>Fries</td><td>EC$10</td></tr><tr><td>Sweet Potato Fries</td><td>EC$12</td></tr>
-          <tr><td>Salad</td><td>EC$14</td></tr><tr><td>Nuts &amp; Olives</td><td>EC$8</td></tr>
-        </table></div>
+        <div class="bc-photo">
+          <img src="/images/hero-pizza.jpg" alt="A Sweet & Crispy dish" id="hero-photo">
+          <div class="bc-photo-fallback">
+            <svg viewBox="0 0 240 240" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                <radialGradient id="crust" cx="50%" cy="45%" r="65%">
+                  <stop offset="0%" stop-color="#F4C572"/><stop offset="70%" stop-color="#D9A24C"/><stop offset="100%" stop-color="#B9812F"/>
+                </radialGradient>
+                <radialGradient id="cheese" cx="50%" cy="42%" r="60%">
+                  <stop offset="0%" stop-color="#FCE2A0"/><stop offset="100%" stop-color="#EFC468"/>
+                </radialGradient>
+              </defs>
+              <circle cx="120" cy="120" r="112" fill="url(#crust)"/>
+              <circle cx="120" cy="120" r="94" fill="url(#cheese)"/>
+              <circle cx="86" cy="86" r="12" fill="#B0463A"/><circle cx="140" cy="72" r="11" fill="#B0463A"/>
+              <circle cx="158" cy="122" r="12" fill="#B0463A"/><circle cx="104" cy="146" r="11" fill="#B0463A"/>
+              <circle cx="150" cy="164" r="10" fill="#B0463A"/><circle cx="70" cy="132" r="10" fill="#B0463A"/>
+              <path d="M100 100 q6 -14 16 -4 q4 10 -8 12z" fill="#6E7B4E"/>
+              <path d="M150 100 q8 -12 16 0 q0 10 -12 10z" fill="#6E7B4E"/>
+              <path d="M116 160 q10 -10 18 2 q-2 10 -14 8z" fill="#6E7B4E"/>
+              <circle cx="120" cy="120" r="112" fill="none" stroke="#9E3623" stroke-width="2" stroke-dasharray="1 11" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
       </div>
+    </div>
+
+    <p class="sub hero-sub">Wood-fired pizza and island favourites, made fresh in true blue Grenada — no shortcuts, no filler, just real food done right.</p>
+    <div class="hero-btns">
+      <button class="btn btn-fill" data-action="go-to-pay" data-section="order">Order Now</button>
+    </div>
+    <div class="hero-meta">
+      <span>📍 Grenada, W.I.</span>
+      <span id="hero-item-count">🍕 Full menu online</span>
+      <span>💳 Card or cash</span>
+    </div>
+    <div class="hero-wave" aria-hidden="true"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="story-grid">
       <div>
-        <div class="food-section"><h3>Breakfast (8am–12pm)</h3><table class="food-table">
-          <tr><td>Full English</td><td>EC$24</td></tr><tr><td>Eggs on Toast</td><td>EC$14</td></tr>
-          <tr><td>Pancakes</td><td>EC$16</td></tr><tr><td>Avocado Toast</td><td>EC$16</td></tr>
-        </table></div>
-        <div class="food-section"><h3>Coffee &amp; Drinks</h3><table class="food-table">
-          <tr><td>Freshly Brewed Coffee</td><td>EC$8</td></tr><tr><td>Cappuccino / Latte</td><td>EC$10</td></tr>
-          <tr><td>Soft Drinks</td><td>EC$6</td></tr><tr><td>Fresh Juice</td><td>EC$10</td></tr>
-        </table></div>
-        <div class="food-section"><h3>Wine &amp; Spirits</h3><table class="food-table">
-          <tr><td>House Wine (glass)</td><td>EC$16</td></tr>
-          <tr><td>House Spirit + Mixer</td><td>EC$18</td></tr>
-          <tr><td>Rum Punch</td><td>EC$16</td></tr>
-        </table></div>
+        <div class="eyebrow">Our Story</div>
+        <h2 style="margin-bottom:1rem;font-size:1.9rem">Family-run. Nothing fancy. Just good food.</h2>
+        <p>Simple, delicious, and done right, every time. That's Sweet &amp; Crispy — no clutter, no shortcuts, just good food from a kitchen that knows what it's doing.</p>
+        <button class="btn btn-outline btn-sm" data-action="go-to" data-page="about" style="margin-top:.5rem">Read More About Us</button>
+      </div>
+      <!--
+        Drop a real photo at public/images/story-pizza.jpg (any size, it's
+        cropped to fit) and it replaces the illustration automatically; if
+        that file doesn't exist yet, the <img> below 404s and its onerror
+        reveals the hand-drawn fallback illustration instead.
+      -->
+      <div class="story-photo">
+        <img src="/images/story-pizza.jpg" alt="Fresh pizzas boxed up for delivery" id="story-photo">
+        <div class="story-art-fallback">
+          <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1.6">
+            <circle cx="100" cy="100" r="86" stroke-dasharray="4 6"/>
+            <path d="M100 30 L165 130 A72 72 0 0 1 35 130 Z"/>
+            <circle cx="80" cy="90" r="5" fill="currentColor" stroke="none"/>
+            <circle cx="118" cy="78" r="5" fill="currentColor" stroke="none"/>
+            <circle cx="100" cy="112" r="5" fill="currentColor" stroke="none"/>
+            <circle cx="130" cy="105" r="5" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
       </div>
     </div>
+
+    <div class="sec-head"><div class="eyebrow">Signature Picks</div><h2>What we're known for</h2><div class="pizza-rule" style="margin:.6rem 0 0"></div></div>
+    <div class="sig-grid" id="sig-grid"></div>
+    <div style="text-align:center;padding:.5rem 0 3rem"><button class="btn btn-fill" data-action="go-to-pay" data-section="order">See Full Menu &amp; Order</button></div>
   </div>
+
+  <div id="home-footer"></div>
 </div>
 
-<!-- ═══════════ RESERVE ═══════════ -->
-<div id="page-reserve" class="page">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2>Reserve a Table</h2>
-      <div class="rule"></div>
-      <p>Pick your date, time, and what you're in the mood for — we'll have it ready</p>
-    </div>
-    <div id="reserve-content"></div>
+<!-- ═══════════ ABOUT / CONTACT ═══════════ -->
+<div id="page-about" class="page">
+  <div class="about-hero wrap-narrow" style="text-align:center">
+    <div class="eyebrow">About Us</div>
+    <h2 style="font-size:2rem;margin-bottom:.75rem">A family table, open to everyone</h2>
+    <p style="color:var(--ink-soft);font-size:.95rem;line-height:1.8">
+      Sweet &amp; Crispy is run by our family, for yours. We kept the space simple and open — you can see the kitchen,
+      you can see the care — because we'd rather spend the effort on the food than the frills. From wood-fired pizza
+      to island plates, everything is made fresh, right here in Grenada.
+    </p>
   </div>
-</div>
-
-<!-- ═══════════ CONTACT ═══════════ -->
-<div id="page-contact" class="page">
   <div class="wrap">
-    <div class="sec-head"><h2>Find Us &amp; Opening Hours</h2><div class="rule"></div></div>
-    <div class="contact-grid">
-      <div class="contact-block">
+    <div class="about-grid">
+      <div class="info-block">
         <h3>Opening Hours</h3>
-        <div class="hours-row"><span>Sunday – Wednesday</span><span style="color:var(--amber)">8:00am – 1:00am</span></div>
-        <div class="hours-row"><span>Thursday – Saturday</span><span style="color:var(--amber)">8:00am – Late</span></div>
-        <div style="margin-top:1.5rem"><h3>Weekly Events</h3>
-          <div class="hours-row"><span>Monday</span><span style="color:var(--text-muted)">Rock Night &amp; Jam</span></div>
-          <div class="hours-row"><span>Tuesday</span><span style="color:var(--text-muted)">Movie Night</span></div>
-          <div class="hours-row"><span>Wednesday</span><span style="color:var(--text-muted)">Western Wednesday</span></div>
-          <div class="hours-row"><span>Thursday</span><span style="color:var(--text-muted)">Latin Night + Salsa 8pm</span></div>
-          <div class="hours-row"><span>Friday</span><span style="color:var(--text-muted)">Live DJ</span></div>
-          <div class="hours-row"><span>Saturday</span><span style="color:var(--text-muted)">Brews &amp; Bites</span></div>
-          <div class="hours-row"><span>Sunday</span><span style="color:var(--text-muted)">Sunday Market</span></div>
-        </div>
+        <div class="hours-row"><span>Monday – Thursday</span><span>11:00am – 9:30pm</span></div>
+        <div class="hours-row"><span>Friday – Saturday</span><span>11:00am – 10:30pm</span></div>
+        <div class="hours-row"><span>Sunday</span><span>12:00pm – 9:00pm</span></div>
       </div>
-      <div class="contact-block">
-        <h3>Location &amp; Contact</h3>
-        <div style="font-size:.85rem;color:var(--text-muted);line-height:1.8;margin-bottom:1rem;">Lance Aux Epines, Saint George Parish, Grenada.<br>Big sign on the right next to the orange wall.<br>Carpark behind the Brewery.</div>
-        <div style="font-size:.85rem;margin-bottom:.4rem;color:var(--amber)">facebook.com/westindiesbeercompany</div>
-        <div style="font-size:.85rem;color:var(--amber)">@westindiesbeer on Instagram</div>
-        <img src="https://westindiesbeer.com/html/images/map.jpg" alt="Map" style="width:100%;margin-top:1.25rem;border-radius:2px;" onerror="this.style.display='none'">
+      <div class="info-block">
+        <h3>Find Us</h3>
+        <div class="foot-line" style="color:var(--ink-soft);margin-bottom:1rem">Grenada, West Indies</div>
+        <a id="directions-link" href="#" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Get Directions</a>
+        <div style="margin-top:1.5rem">
+          <h3 style="margin-bottom:.6rem">Message Us</h3>
+          <a id="wa-link-about" class="wa-btn" href="#" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.6-.8-1.9-.9-.2-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.5.1-.3-.1-1.1-.4-2.1-1.3-.8-.7-1.3-1.6-1.5-1.8-.2-.3 0-.4.1-.6l.4-.5c.1-.2.1-.3 0-.5-.1-.1-.6-1.5-.9-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.6-.7 1.9-1.3.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.2-1.4c1.4.8 3.1 1.2 4.8 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 14.9 3.6 13.5 3.6 12c0-4.6 3.8-8.4 8.4-8.4s8.4 3.8 8.4 8.4-3.8 8.2-8.4 8.2z"/></svg>
+            Chat on WhatsApp
+          </a>
+        </div>
       </div>
     </div>
   </div>
+  <div id="about-footer"></div>
 </div>
 
-<!-- ═══════════ ADMIN ═══════════ -->
-<div id="page-admin" class="page">
+<!-- ═══════════ PAY: ORDER ═══════════ -->
+<div id="page-pay" class="page">
   <div class="wrap">
-    <div id="admin-gate">
-      <div class="login-box">
-        <h2>Staff Access</h2>
-        <p>Enter your PIN to access management</p>
-        <div style="margin-bottom:1rem"><label style="display:block;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.35rem">PIN</label>
-        <input type="password" id="pin-input" style="width:100%;background:var(--brown-mid);border:1px solid var(--border-soft);color:var(--text);font-size:.9rem;padding:.6rem .75rem;border-radius:2px;outline:none;" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-        <button class="save-btn" onclick="doLogin()">Enter</button>
-      </div>
+    <div class="sec-head center">
+      <div class="eyebrow">Order Online</div>
+      <h2>Get your food, your way</h2>
     </div>
-    <div id="admin-dash" style="display:none">
-      <div style="padding:1.5rem 0 .5rem;display:flex;align-items:center;justify-content:space-between;">
-        <h2 style="font-size:1.6rem">Management</h2>
-        <button class="del-btn" onclick="doLogout()">Log out</button>
-      </div>
-      <div class="admin-layout">
-        <div class="admin-sidebar">
-          <button class="asb on" onclick="aTab('reservations')">Reservations</button>
-          <button class="asb" onclick="aTab('specials')">Daily Specials</button>
-          <button class="asb" onclick="aTab('live')">Live Orders</button>
-          <button class="asb" onclick="aTab('sales')">Sales Report</button>
-        </div>
-        <div>
 
-          <!-- RESERVATIONS PANEL -->
-          <div class="ap on" id="ap-reservations">
-            <h3>Reservations</h3>
-            <p class="sub">All bookings — filter by date. Update status as guests arrive.</p>
-            <div class="capacity-box">
-              <label>Max covers per time slot</label>
-              <input type="number" id="max-covers-input" value="20" min="1" max="200">
-              <button class="save-btn" onclick="saveCapacity()" style="padding:.4rem 1rem;font-size:.72rem">Save</button>
-            </div>
-            <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap">
-              <div>
-                <label style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:.35rem">Filter by Date</label>
-                <input type="date" id="res-date-filter" style="background:var(--brown-mid);border:1px solid var(--border-soft);color:var(--text);font-size:.88rem;padding:.5rem .75rem;border-radius:2px;outline:none;" onchange="loadAdminReservations()">
-              </div>
-              <div style="margin-top:1.2rem">
-                <button class="cat-tab on" onclick="filterResStatus('all',this)" style="font-size:.72rem">All</button>
-                <button class="cat-tab" onclick="filterResStatus('confirmed',this)" style="font-size:.72rem">Confirmed</button>
-                <button class="cat-tab" onclick="filterResStatus('seated',this)" style="font-size:.72rem">Seated</button>
-                <button class="cat-tab" onclick="filterResStatus('no-show',this)" style="font-size:.72rem">No-show</button>
-              </div>
-            </div>
-            <div id="admin-res-list"></div>
-          </div>
-
-          <!-- SPECIALS PANEL -->
-          <div class="ap" id="ap-specials">
-            <h3>Daily Specials</h3>
-            <p class="sub">Add tonight's specials — goes live immediately on every screen</p>
-            <div style="margin-bottom:1rem"><label style="display:block;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.35rem">Beer / Drink Name</label>
-            <input type="text" id="sp-name" style="width:100%;background:var(--brown-mid);border:1px solid var(--border-soft);color:var(--text);font-size:.9rem;padding:.6rem .75rem;border-radius:2px;outline:none;" placeholder="e.g. Windward IPA Special"></div>
-            <div style="margin-bottom:1rem"><label style="display:block;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.35rem">Description</label>
-            <input type="text" id="sp-desc" style="width:100%;background:var(--brown-mid);border:1px solid var(--border-soft);color:var(--text);font-size:.9rem;padding:.6rem .75rem;border-radius:2px;outline:none;" placeholder="e.g. Our flagship, EC$3 off tonight only"></div>
-            <div class="form-2" style="margin-bottom:1rem">
-              <div><label style="display:block;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.35rem">Special Price (EC$)</label>
-              <input type="number" id="sp-price" style="width:100%;background:var(--brown-mid);border:1px solid var(--border-soft);color:var(--text);font-size:.9rem;padding:.6rem .75rem;border-radius:2px;outline:none;" placeholder="15"></div>
-              <div><label style="display:block;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.35rem">Original Price (EC$)</label>
-              <input type="number" id="sp-orig" style="width:100%;background:var(--brown-mid);border:1px solid var(--border-soft);color:var(--text);font-size:.9rem;padding:.6rem .75rem;border-radius:2px;outline:none;" placeholder="18"></div>
-            </div>
-            <div style="margin-bottom:1rem"><label style="display:block;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.35rem">Category</label>
-            <select id="sp-cat" style="width:100%;background:var(--brown-mid);border:1px solid var(--border-soft);color:var(--text);font-size:.9rem;padding:.6rem .75rem;border-radius:2px;outline:none;"><option>IPA</option><option>Ale</option><option>Cider</option><option>Lager</option><option>Stout</option><option>Porter</option><option>Saison</option><option>Food</option><option>Other</option></select></div>
-            <button class="save-btn" onclick="apiAddSpecial()">Add Special</button>
-            <div id="admin-specials-list" style="margin-top:1.5rem"></div>
-          </div>
-
-          <!-- LIVE ORDERS -->
-          <div class="ap" id="ap-live">
-            <h3>Live Orders</h3>
-            <p class="sub">Pending orders — update status as you go</p>
-            <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
-              <button class="cat-tab on" onclick="filterLive('pending',this)">Pending</button>
-              <button class="cat-tab" onclick="filterLive('preparing',this)">Preparing</button>
-              <button class="cat-tab" onclick="filterLive('ready',this)">Ready</button>
-              <button class="cat-tab" onclick="filterLive('all',this)">All</button>
-            </div>
-            <div id="live-list"></div>
-          </div>
-
-          <!-- SALES -->
-          <div class="ap" id="ap-sales">
-            <h3>Sales Report</h3>
-            <p class="sub">Live data — updates with every order</p>
-            <div class="stats-row" id="stats-row"></div>
-            <div class="report-block"><h4>Top Selling Drinks</h4><div id="top-chart"></div></div>
-            <div class="report-block"><h4>Recent Orders</h4>
-              <table class="ord-tbl"><thead><tr><th>Order #</th><th>Table</th><th>Items</th><th>Total</th><th>Time</th><th>Status</th></tr></thead>
-              <tbody id="ord-tbody"></tbody></table>
-            </div>
-          </div>
-
-        </div>
-      </div>
+    <!-- ORDER FOOD -->
+    <div class="pay-section on" id="pay-order">
+      <div id="order-content"></div>
     </div>
   </div>
+  <div id="pay-footer"></div>
 </div>
 
-<div class="toast" id="toast"></div>
+<a class="wa-float" id="wa-float" href="#" target="_blank" rel="noopener" title="Message us on WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.6-.8-1.9-.9-.2-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.5.1-.3-.1-1.1-.4-2.1-1.3-.8-.7-1.3-1.6-1.5-1.8-.2-.3 0-.4.1-.6l.4-.5c.1-.2.1-.3 0-.5-.1-.1-.6-1.5-.9-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.6-.7 1.9-1.3.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.2-1.4c1.4.8 3.1 1.2 4.8 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3C4 14.9 3.6 13.5 3.6 12c0-4.6 3.8-8.4 8.4-8.4s8.4 3.8 8.4 8.4-3.8 8.2-8.4 8.2z"/></svg>
+</a>
 
-<script>
-// ============================================================
-// CONFIG
-// ============================================================
-const API = '';
-const FOOD_OPTIONS = [
-  { id:'bottomless', label:'⭐ Most Popular', name:'Bottomless Mimosa Brunch', desc:'Unlimited mimosas + your choice of brunch plate', price:'Ask at bar', star:true },
-  { id:'full_english', label:'Breakfast', name:'Full English', desc:'Eggs, bacon, sausage, beans, toast', price:'EC$24' },
-  { id:'pancakes', label:'Breakfast', name:'Pancakes', desc:'Stack of three with maple syrup', price:'EC$16' },
-  { id:'avocado', label:'Breakfast', name:'Avocado Toast', desc:'Sourdough, smashed avo, chilli flakes', price:'EC$16' },
-  { id:'fish_tacos', label:'Pub Grub', name:'Fish Tacos', desc:'Three tacos with slaw and hot sauce', price:'EC$22' },
-  { id:'wings', label:'Pub Grub', name:'Chicken Wings', desc:'Six wings with your choice of sauce', price:'EC$20' },
-  { id:'drinks_only', label:'Drinks', name:'Drinks Only', desc:"Just here for the beers — no food needed", price:'' },
-];
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
-// ============================================================
-// STATE
-// ============================================================
-let menuItems = [], specials = [], activeCat = 'All', liveFilter = 'pending';
-let resState = { date: '', time: '', partySize: 2, foodChoice: '', slots: [] };
-let adminResFilter = 'all';
-
-// ============================================================
-// HELPERS
-// ============================================================
-async function api(method, path, body) {
-  try {
-    const opts = { method, headers: { 'Content-Type': 'application/json' } };
-    if (body) opts.body = JSON.stringify(body);
-    const r = await fetch(API + path, opts);
-    return await r.json();
-  } catch(e) { return { ok: false, error: 'Network error — is the server running?' }; }
-}
-function toast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast in' + (type ? ' ' + type : '');
-  setTimeout(() => t.classList.remove('in'), 2800);
-}
-function fmtDate(d) {
-  return new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
-}
-function fmt12(t) {
-  const [h, m] = t.split(':').map(Number);
-  return `${h === 0 ? 12 : h > 12 ? h - 12 : h}:${String(m).padStart(2,'0')} ${h < 12 ? 'AM' : 'PM'}`;
-}
-
-// ============================================================
-// NAV
-// ============================================================
-function goTo(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  const pages = ['home','beers','food','reserve','contact'];
-  const idx = pages.indexOf(page);
-  if (idx >= 0) document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
-  if (page === 'home')    { loadSpecials().then(renderHomeSpecials); }
-  if (page === 'beers')   { loadMenu().then(renderBeers); }
-  if (page === 'reserve') { renderReservePage(); }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// SLIDER
-let sIdx = 0;
-setInterval(() => {
-  document.getElementById('sl' + sIdx)?.classList.remove('show');
-  sIdx = (sIdx + 1) % 5;
-  document.getElementById('sl' + sIdx)?.classList.add('show');
-}, 4500);
-
-// ============================================================
-// MENU / BEERS
-// ============================================================
-async function loadMenu() {
-  if (menuItems.length) return;
-  const res = await api('GET', '/api/menu');
-  if (res.ok) menuItems = res.items;
-}
-function renderBeers() {
-  const cats = ['All', ...new Set(menuItems.map(b => b.category))];
-  document.getElementById('cat-tabs').innerHTML = cats.map(c =>
-    `<button class="cat-tab${c === activeCat ? ' on' : ''}" onclick="filterCat('${c}')">${c}</button>`).join('');
-  const list = activeCat === 'All' ? menuItems : menuItems.filter(b => b.category === activeCat);
-  document.getElementById('beers-grid').innerHTML = list.map(b => `
-    <div class="beer-card">
-      <span class="beer-abv">${b.abv}</span><span class="beer-type">${b.category}</span>
-      <div class="beer-name">${b.name}${b.is_flagship ? ' <span style="font-size:.65rem;color:var(--amber)">★ FLAGSHIP</span>' : ''}</div>
-      <div class="beer-desc">${b.description}</div>
-      <div class="beer-footer"><div class="beer-price">EC$${Number(b.price_ec).toFixed(0)}</div></div>
-    </div>`).join('');
-}
-function filterCat(c) { activeCat = c; renderBeers(); }
-
-// ============================================================
-// SPECIALS
-// ============================================================
-async function loadSpecials() {
-  const res = await api('GET', '/api/specials');
-  if (res.ok) specials = res.specials;
-}
-function renderHomeSpecials() {
-  document.getElementById('home-spec-date').textContent =
-    new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-  const el = document.getElementById('home-specials');
-  if (!specials.length) {
-    el.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-dim);font-style:italic;font-size:.9rem">No specials tonight — check back soon or ask at the bar.</div>';
-    return;
-  }
-  el.innerHTML = `<div class="specials-row">${specials.map(s => `
-    <div class="special-card">
-      <div class="sc-label">${s.category || 'Special'} · Tonight Only</div>
-      <div class="sc-name">${s.name}</div>
-      <div class="sc-desc">${s.description || ''}</div>
-      <div class="sc-prices">
-        <div class="sc-price">EC$${Number(s.price_ec).toFixed(0)}</div>
-        ${s.original_ec ? `<div class="sc-was">EC$${Number(s.original_ec).toFixed(0)}</div>` : ''}
-      </div>
-    </div>`).join('')}</div>`;
-}
-
-// ============================================================
-// RESERVATION PAGE
-// ============================================================
-function renderReservePage() {
-  // Build next 7 days as date tabs
-  const days = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(); d.setDate(d.getDate() + i);
-    const iso = d.toISOString().split('T')[0];
-    const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-GB', { weekday:'short' });
-    const num = d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
-    days.push({ iso, label, num });
-  }
-  if (!resState.date) resState.date = days[0].iso;
-
-  document.getElementById('reserve-content').innerHTML = `
-    <div class="res-layout">
-      <div>
-        <!-- DATE -->
-        <div class="step-label">1 · Choose a Date</div>
-        <div class="date-tabs">${days.map(d => `
-          <div class="date-tab${d.iso === resState.date ? ' on' : ''}" onclick="pickDate('${d.iso}',this)">
-            <span class="dt-day">${d.num}</span>
-            <span class="dt-label">${d.label}</span>
-          </div>`).join('')}
-        </div>
-
-        <!-- FOOD CHOICE -->
-        <div class="step-label">2 · What are you here for?</div>
-        <div class="food-picker">${FOOD_OPTIONS.map(f => `
-          <div class="food-opt${f.star ? ' star-opt' : ''}${resState.foodChoice === f.name ? ' selected' : ''}" onclick="pickFood('${f.name.replace(/'/g,"\\'")}',this)">
-            <div class="food-opt-label">${f.label}</div>
-            <div class="food-opt-name">${f.name}</div>
-            <div class="food-opt-desc">${f.desc}</div>
-            ${f.price ? `<div class="food-opt-price">${f.price}</div>` : ''}
-          </div>`).join('')}
-        </div>
-
-        <!-- PARTY SIZE -->
-        <div class="step-label">3 · Party Size</div>
-        <div style="margin-bottom:1.75rem">
-          <div class="party-stepper">
-            <button class="ps-btn" onclick="changeParty(-1)">−</button>
-            <span class="ps-num" id="party-num">${resState.partySize}</span>
-            <button class="ps-btn" onclick="changeParty(1)">+</button>
-            <span class="ps-label">guests</span>
-          </div>
-        </div>
-
-        <!-- TIME SLOTS -->
-        <div class="step-label">4 · Pick a Time</div>
-        <div class="slot-grid" id="slot-grid"><div style="color:var(--text-dim);font-size:.82rem;grid-column:1/-1"><span class="spinner"></span>Loading times…</div></div>
-      </div>
-
-      <!-- SUMMARY / BOOKING FORM -->
-      <div class="res-summary">
-        <h3>Your Booking</h3>
-        <div class="sub">Almost there — confirm below</div>
-        <div class="sum-row"><div class="sum-lbl">Date</div><div class="sum-val" id="sum-date">${fmtDate(resState.date)}</div></div>
-        <div class="sum-row"><div class="sum-lbl">Time</div><div class="sum-val" id="sum-time" style="color:var(--text-dim)">Not selected</div></div>
-        <div class="sum-row"><div class="sum-lbl">Party</div><div class="sum-val" id="sum-party">${resState.partySize} guests</div></div>
-        <div class="sum-row"><div class="sum-lbl">Food</div><div class="sum-val" id="sum-food" style="color:var(--text-dim)">Not selected</div></div>
-        <div style="margin-top:1.25rem">
-          <div class="res-field"><label>Your Name</label><input id="res-name" placeholder="First & last name"></div>
-          <div class="res-field"><label>Phone (optional)</label><input id="res-phone" placeholder="+1 (473) …" type="tel"></div>
-          <div class="res-field"><label>Any notes?</label><textarea id="res-notes" placeholder="Allergies, special occasion, etc."></textarea></div>
-        </div>
-        <button class="book-btn" id="book-btn" onclick="submitReservation()" disabled>Confirm Reservation</button>
-      </div>
-    </div>`;
-
-  loadSlots(resState.date);
-}
-
-async function loadSlots(date) {
-  const res = await api('GET', '/api/reservations/slots?date=' + date);
-  const grid = document.getElementById('slot-grid');
-  if (!grid) return;
-  if (!res.ok) { grid.innerHTML = '<div style="color:var(--text-dim);font-size:.82rem;grid-column:1/-1">Could not load times.</div>'; return; }
-  resState.slots = res.slots;
-  grid.innerHTML = res.slots.map(s => `
-    <div class="slot-btn${!s.available ? ' full' : ''}${resState.time === s.time ? ' picked' : ''}"
-         onclick="${s.available ? `pickTime('${s.time}',this)` : ''}">
-      <span class="slot-time">${fmt12(s.time)}</span>
-      <span class="slot-left${s.remaining <= 5 ? ' low' : ''}">${s.available ? (s.remaining <= 5 ? `${s.remaining} left` : 'Available') : 'Full'}</span>
-    </div>`).join('');
-}
-
-function pickDate(date, el) {
-  resState.date = date;
-  resState.time = '';
-  document.querySelectorAll('.date-tab').forEach(d => d.classList.remove('on'));
-  el.classList.add('on');
-  document.getElementById('sum-date').textContent = fmtDate(date);
-  document.getElementById('sum-time').textContent = 'Not selected';
-  document.getElementById('sum-time').style.color = 'var(--text-dim)';
-  loadSlots(date);
-  checkBookBtn();
-}
-function pickTime(time, el) {
-  resState.time = time;
-  document.querySelectorAll('.slot-btn').forEach(s => s.classList.remove('picked'));
-  el.classList.add('picked');
-  const tv = document.getElementById('sum-time');
-  tv.textContent = fmt12(time);
-  tv.style.color = 'var(--cream)';
-  checkBookBtn();
-}
-function pickFood(name, el) {
-  resState.foodChoice = name;
-  document.querySelectorAll('.food-opt').forEach(f => f.classList.remove('selected'));
-  el.classList.add('selected');
-  const fv = document.getElementById('sum-food');
-  fv.textContent = name;
-  fv.style.color = 'var(--cream)';
-  checkBookBtn();
-}
-function changeParty(d) {
-  resState.partySize = Math.max(1, Math.min(30, resState.partySize + d));
-  document.getElementById('party-num').textContent = resState.partySize;
-  document.getElementById('sum-party').textContent = resState.partySize + ' guests';
-}
-function checkBookBtn() {
-  const btn = document.getElementById('book-btn');
-  if (btn) btn.disabled = !(resState.date && resState.time);
-}
-
-async function submitReservation() {
-  const name  = document.getElementById('res-name')?.value.trim();
-  const phone = document.getElementById('res-phone')?.value.trim();
-  const notes = document.getElementById('res-notes')?.value.trim();
-  if (!name) { toast('Please enter your name', 'err'); return; }
-
-  const btn = document.getElementById('book-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Booking…';
-
-  const res = await api('POST', '/api/reservations', {
-    guest_name: name, phone, party_size: resState.partySize,
-    res_date: resState.date, res_time: resState.time,
-    food_choice: resState.foodChoice || null, notes
-  });
-
-  if (!res.ok) {
-    toast(res.error, 'err');
-    btn.disabled = false; btn.textContent = 'Confirm Reservation'; return;
-  }
-
-  const r = res.reservation;
-  document.getElementById('reserve-content').innerHTML = `
-    <div class="res-success">
-      <h2>You're Booked! 🥂</h2>
-      <div class="res-ref">${r.ref}</div>
-      <p><strong>${r.guest_name}</strong> · ${r.party_size} guests<br>
-         ${fmtDate(r.res_date)} at ${fmt12(r.res_time)}<br>
-         ${r.food_choice ? r.food_choice : ''}
-      </p>
-      <p>Just give your name at the door. See you soon!</p>
-      <button class="btn-amber" onclick="resState.time='';resState.foodChoice='';renderReservePage()">Make Another Booking</button>
-    </div>`;
-  toast('Reservation confirmed! ' + r.ref, 'amber');
-}
-
-// ============================================================
-// ADMIN — AUTH
-// ============================================================
-async function doLogin() {
-  const res = await api('POST', '/api/auth/login', { pin: document.getElementById('pin-input').value });
-  if (res.ok) {
-    document.getElementById('admin-gate').style.display = 'none';
-    document.getElementById('admin-dash').style.display = 'block';
-    loadAdminReservations(); loadAdminSpecials(); renderSales();
-    // Set today's date as default filter
-    document.getElementById('res-date-filter').value = new Date().toISOString().split('T')[0];
-  } else { toast('Wrong PIN', 'err'); document.getElementById('pin-input').value = ''; }
-}
-function doLogout() {
-  document.getElementById('admin-gate').style.display = 'block';
-  document.getElementById('admin-dash').style.display = 'none';
-  document.getElementById('pin-input').value = '';
-}
-function aTab(t) {
-  document.querySelectorAll('.ap').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.asb').forEach(b => b.classList.remove('on'));
-  document.getElementById('ap-' + t).classList.add('on');
-  event.target.classList.add('on');
-  if (t === 'reservations') loadAdminReservations();
-  if (t === 'specials')     loadAdminSpecials();
-  if (t === 'live')         renderLiveOrders();
-  if (t === 'sales')        renderSales();
-}
-
-// ============================================================
-// ADMIN — RESERVATIONS
-// ============================================================
-async function loadAdminReservations() {
-  // Load capacity setting
-  const sr = await api('GET', '/api/reservations/admin/settings');
-  if (sr.ok) document.getElementById('max-covers-input').value = sr.settings.max_covers_per_slot || 20;
-
-  const date = document.getElementById('res-date-filter')?.value || '';
-  let url = '/api/reservations';
-  const params = [];
-  if (date) params.push('date=' + date);
-  if (adminResFilter !== 'all') params.push('status=' + adminResFilter);
-  if (params.length) url += '?' + params.join('&');
-
-  const res = await api('GET', url);
-  const el = document.getElementById('admin-res-list');
-  if (!res.ok) { el.innerHTML = '<p style="color:var(--text-dim)">Could not load reservations.</p>'; return; }
-  const list = res.reservations;
-
-  // Summary counts
-  const counts = { confirmed:0, seated:0, 'no-show':0, cancelled:0 };
-  list.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
-  const total = list.reduce((s,r) => s + r.party_size, 0);
-
-  if (!list.length) {
-    el.innerHTML = '<p style="color:var(--text-muted);font-style:italic;text-align:center;padding:2rem">No reservations for this date.</p>';
-    return;
-  }
-
-  el.innerHTML = `
-    <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.25rem">
-      <div class="stat" style="padding:.85rem 1.1rem;flex:1;min-width:100px"><div class="stat-lbl">Total Covers</div><div class="stat-val" style="font-size:1.5rem">${total}</div></div>
-      <div class="stat" style="padding:.85rem 1.1rem;flex:1;min-width:100px"><div class="stat-lbl">Confirmed</div><div class="stat-val" style="font-size:1.5rem">${counts.confirmed}</div></div>
-      <div class="stat" style="padding:.85rem 1.1rem;flex:1;min-width:100px"><div class="stat-lbl">Seated</div><div class="stat-val" style="font-size:1.5rem">${counts.seated}</div></div>
-      <div class="stat" style="padding:.85rem 1.1rem;flex:1;min-width:100px"><div class="stat-lbl">No-show</div><div class="stat-val" style="font-size:1.5rem">${counts['no-show']}</div></div>
-    </div>
-    ${list.map(r => `
-    <div class="res-card">
-      <div class="res-card-info">
-        <div class="res-name">${r.guest_name} <span style="font-size:.72rem;color:var(--text-dim)">${r.ref}</span></div>
-        <div class="res-detail">
-          ${fmt12(r.res_time)} · ${r.party_size} guest${r.party_size > 1 ? 's' : ''}
-          ${r.phone ? `· ${r.phone}` : ''}
-          <span class="badge b-${r.status}" style="margin-left:.4rem">${r.status}</span>
-        </div>
-        ${r.food_choice ? `<div class="res-food">🍽 ${r.food_choice}</div>` : ''}
-        ${r.notes ? `<div style="font-size:.75rem;color:var(--text-dim);margin-top:.25rem">Note: ${r.notes}</div>` : ''}
-      </div>
-      <div class="res-card-actions">
-        ${r.status !== 'seated'    ? `<button class="st-btn" onclick="setResStatus(${r.id},'seated')">Seat ✓</button>` : ''}
-        ${r.status !== 'no-show'   ? `<button class="st-btn" onclick="setResStatus(${r.id},'no-show')">No-show</button>` : ''}
-        ${r.status !== 'cancelled' ? `<button class="del-btn" onclick="setResStatus(${r.id},'cancelled')">Cancel</button>` : ''}
-      </div>
-    </div>`).join('')}`;
-}
-function filterResStatus(f, btn) {
-  adminResFilter = f;
-  document.querySelectorAll('#ap-reservations .cat-tab').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  loadAdminReservations();
-}
-async function setResStatus(id, status) {
-  const res = await api('PATCH', `/api/reservations/${id}/status`, { status });
-  if (res.ok) { loadAdminReservations(); toast('Updated to ' + status, 'amber'); }
-  else toast('Error: ' + res.error, 'err');
-}
-async function saveCapacity() {
-  const val = document.getElementById('max-covers-input').value;
-  const res = await api('PATCH', '/api/reservations/admin/settings', { max_covers_per_slot: val });
-  if (res.ok) toast('Capacity saved — ' + val + ' covers per slot', 'amber');
-  else toast('Error saving', 'err');
-}
-
-// ============================================================
-// ADMIN — SPECIALS
-// ============================================================
-async function loadAdminSpecials() {
-  const res = await api('GET', '/api/specials');
-  if (res.ok) { specials = res.specials; renderAdminSpecials(); }
-}
-async function apiAddSpecial() {
-  const name = document.getElementById('sp-name').value.trim();
-  const price = document.getElementById('sp-price').value;
-  if (!name || !price) { toast('Name and price required', 'err'); return; }
-  const res = await api('POST', '/api/specials', {
-    name, description: document.getElementById('sp-desc').value,
-    price_ec: parseFloat(price),
-    original_ec: parseFloat(document.getElementById('sp-orig').value) || null,
-    category: document.getElementById('sp-cat').value,
-  });
-  if (res.ok) {
-    ['sp-name','sp-desc','sp-price','sp-orig'].forEach(id => document.getElementById(id).value = '');
-    await loadAdminSpecials(); toast('Special added!', 'amber');
-  } else toast('Error: ' + res.error, 'err');
-}
-async function removeSpecial(id) {
-  const res = await api('DELETE', '/api/specials/' + id);
-  if (res.ok) { await loadAdminSpecials(); toast('Removed'); }
-}
-function renderAdminSpecials() {
-  const el = document.getElementById('admin-specials-list');
-  if (!specials.length) { el.innerHTML = '<p style="color:var(--text-dim);font-size:.82rem">No specials posted yet.</p>'; return; }
-  el.innerHTML = `<p style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);margin-bottom:.75rem">Active (${specials.length})</p>`
-    + specials.map(s => `<div class="sp-row"><div><div class="sp-row-name">${s.name}</div><div class="sp-row-meta">EC$${Number(s.price_ec).toFixed(0)} · ${s.category || '—'}</div></div><button class="del-btn" onclick="removeSpecial(${s.id})">Remove</button></div>`).join('');
-}
-
-// ============================================================
-// ADMIN — LIVE ORDERS
-// ============================================================
-async function renderLiveOrders() {
-  const filter = liveFilter === 'all' ? '' : '?status=' + liveFilter;
-  const res = await api('GET', '/api/orders' + filter);
-  const el = document.getElementById('live-list');
-  if (!res.ok) { el.innerHTML = '<p style="color:var(--text-dim)">Could not load orders.</p>'; return; }
-  const orders = res.orders;
-  if (!orders.length) { el.innerHTML = '<p style="color:var(--text-muted);font-style:italic;text-align:center;padding:2rem">No orders here.</p>'; return; }
-  el.innerHTML = orders.map(o => `
-    <div class="live-card">
-      <div class="live-card-head">
-        <div><div class="live-id">${o.order_ref} — Table ${o.table_number}</div>
-        <div class="live-meta">${new Date(o.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} · EC$${Number(o.total_ec).toFixed(0)} · <span class="badge b-${o.status}">${o.status}</span></div></div>
-      </div>
-      <div class="live-items">${o.items?.map(i=>`${i.item_name} ×${i.quantity}`).join(' · ')||'—'}</div>
-      ${o.notes?`<div class="live-note">Note: ${o.notes}</div>`:''}
-      <div class="status-btns">
-        ${o.status!=='preparing'?`<button class="st-btn" onclick="setStatus(${o.id},'preparing')">Preparing</button>`:''}
-        ${o.status!=='ready'?`<button class="st-btn" onclick="setStatus(${o.id},'ready')">Ready</button>`:''}
-        ${o.status!=='paid'?`<button class="st-btn paid" onclick="setStatus(${o.id},'paid')">Mark Paid ✓</button>`:''}
-      </div>
-    </div>`).join('');
-}
-function filterLive(f, btn) {
-  liveFilter = f;
-  document.querySelectorAll('#ap-live .cat-tab').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  renderLiveOrders();
-}
-async function setStatus(id, status) {
-  const res = await api('PATCH', `/api/orders/${id}/status`, { status });
-  if (res.ok) { renderLiveOrders(); if (status==='paid') renderSales(); toast('Updated to ' + status, 'amber'); }
-  else toast('Error: ' + res.error, 'err');
-}
-
-// ============================================================
-// ADMIN — SALES
-// ============================================================
-async function renderSales() {
-  const [sumRes, topRes, ordRes] = await Promise.all([
-    api('GET','/api/sales/summary'),
-    api('GET','/api/sales/top-items?limit=8'),
-    api('GET','/api/orders'),
-  ]);
-  if (!sumRes.ok) return;
-  const s = sumRes.summary;
-  document.getElementById('stats-row').innerHTML = `
-    <div class="stat"><div class="stat-lbl">Total Revenue</div><div class="stat-val">EC$${Number(s.gross_revenue).toFixed(0)}</div><div class="stat-note">All time</div></div>
-    <div class="stat"><div class="stat-lbl">Today's Revenue</div><div class="stat-val">EC$${Number(s.revenue_today).toFixed(0)}</div><div class="stat-note">${s.orders_today} orders</div></div>
-    <div class="stat"><div class="stat-lbl">Avg Order</div><div class="stat-val">EC$${Number(s.avg_order).toFixed(0)}</div><div class="stat-note">Per order</div></div>
-    <div class="stat"><div class="stat-lbl">Pending</div><div class="stat-val">${s.pending_count}</div><div class="stat-note">Open orders</div></div>`;
-  const items = topRes.ok ? topRes.items : [];
-  const max = items[0]?.total_sold || 1;
-  document.getElementById('top-chart').innerHTML = items.length
-    ? items.map(i=>`<div class="bar-r"><div class="b-lbl">${i.item_name}</div><div class="b-track"><div class="b-fill" style="width:${(i.total_sold/max*100).toFixed(0)}%"></div></div><div class="b-num">${i.total_sold}</div></div>`).join('')
-    : '<p style="color:var(--text-dim);font-size:.82rem">No data yet.</p>';
-  const orders = ordRes.ok ? ordRes.orders : [];
-  document.getElementById('ord-tbody').innerHTML = orders.slice(0,25).map(o=>`<tr>
-    <td>${o.order_ref}</td><td>Table ${o.table_number}</td>
-    <td style="color:var(--text-muted)">${(o.items||[]).map(i=>i.item_name).join(', ').slice(0,40)||'—'}</td>
-    <td style="color:var(--amber)">EC$${Number(o.total_ec).toFixed(0)}</td>
-    <td>${new Date(o.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td>
-    <td><span class="badge b-${o.status==='paid'?'paid':'pend'}">${o.status}</span></td>
-  </tr>`).join('')||'<tr><td colspan="6" style="color:var(--text-dim);text-align:center;padding:2rem">No orders yet.</td></tr>';
-}
-
-// ── Init ─────────────────────────────────────────────────────
-document.getElementById('home-spec-date').textContent =
-  new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-loadSpecials().then(renderHomeSpecials);
-loadMenu();
-</script>
+<!-- Native ES modules — app.js imports everything else it needs (services/,
+     ui/, pages/) and bootstraps the app. No bundler, no build step. -->
+<script type="module" src="/js/app.js"></script>
 </body>
 </html>
